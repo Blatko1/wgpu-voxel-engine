@@ -12,6 +12,7 @@ wgpu-subscriber = "0.1.0"
 anyhow = "1.0.42"
 winit = "0.25.0"
 futures = "0.3.16"
+bytemuck = {version = "1.7.2", features = [ "derive" ]}
 
 [build-dependencies]
 shaderc = "0.7.2"
