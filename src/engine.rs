@@ -10,7 +10,8 @@ pub struct Engine {
 impl Engine {
     pub fn new(graphics: &Graphics) -> Self {
         let renderer = Renderer::new(&graphics);
-        let world = World::new();
+        let mut world = World::new(&graphics);
+        world.add_test(0, 0, 0, &graphics);
         Self { renderer, world }
     }
 

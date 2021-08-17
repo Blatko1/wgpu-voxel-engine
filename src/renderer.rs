@@ -37,7 +37,7 @@ impl Renderer {
 }
 
 pub trait Renderable {
-    fn render<'a>(&self, pass: &mut wgpu::RenderPass<'a>, renderer: &'a Renderer);
+    fn render<'a>(&'a self, pass: &mut wgpu::RenderPass<'a>, renderer: &'a Renderer);
 }
 
 struct RenderPassBuilder<'a> {

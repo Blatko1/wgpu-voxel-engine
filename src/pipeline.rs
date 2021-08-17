@@ -2,6 +2,7 @@ use crate::graphics::Graphics;
 use std::fs;
 use std::path::Path;
 use crate::vertex::Vertex;
+use crate::instance::InstanceRaw;
 
 pub struct Pipeline {
     pub pipeline: wgpu::RenderPipeline,
@@ -85,7 +86,7 @@ impl Pipeline {
     pub fn main_pipeline(graphics: &Graphics) -> Pipeline {
         let shader_dir = std::path::Path::new(std::env::current_dir().unwrap().as_os_str()).join("src/shaders");
         let bind_group_layouts: Vec<&wgpu::BindGroupLayout> = vec![];
-        let vertex_buffer_layouts = vec![Vertex::init_buffer_layout()];
+        let vertex_buffer_layouts = vec![Vertex::init_buffer_layout(), InstanceRaw::init_buffer_layout()];
         Pipeline::new(
             &graphics,
             "main",

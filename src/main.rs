@@ -12,6 +12,7 @@ mod vertex;
 mod chunk;
 mod quad;
 mod cube;
+mod instance;
 
 use engine::Engine;
 use graphics::Graphics;

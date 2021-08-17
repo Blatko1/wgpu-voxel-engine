@@ -79,7 +79,7 @@ impl Chunk {
         return faces;
     }
 
-    pub fn render<'a>(&self, pass: &mut wgpu::RenderPass<'a>) {
+    pub fn render<'a>(&'a self, pass: &mut wgpu::RenderPass<'a>) {
         self.chunk_mesh.render(pass);
     }
 }
@@ -121,8 +121,9 @@ impl ChunkMesh {
         }
     }
 
-    fn render<'a>(&self, pass: &mut wgpu::RenderPass<'a>) {
+    fn render<'a>(&'a self, pass: &mut wgpu::RenderPass<'a>) {
         pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
-        pass.draw_indexed(0..self.indices_len as _, 0, 0..self.instances_len as _);
+        pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint32);
+        pass.draw_indexed(0..self.indices_len as _, 0, 0..1);   //self.instances_len as _
     }
 }
