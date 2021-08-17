@@ -13,6 +13,7 @@ mod chunk;
 mod quad;
 mod cube;
 mod instance;
+mod region;
 
 use engine::Engine;
 use graphics::Graphics;

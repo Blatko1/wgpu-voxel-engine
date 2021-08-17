@@ -3,6 +3,7 @@ use wgpu::util::DeviceExt;
 use crate::vertex::Vertex;
 use crate::quad::{self, Quad};
 use crate::cube::Cube;
+use std::collections::HashMap;
 
 const CHUNK_LENGTH: usize = 16;
 const CHUNK_WIDTH: usize = 16;
@@ -11,26 +12,29 @@ const CHUNK_HEIGHT: usize = 16;
 const CHUNK_SIZE: usize = CHUNK_WIDTH * CHUNK_LENGTH * CHUNK_HEIGHT;
 
 pub struct Chunk {
+    pos: [i32; 3],
     voxels: [Cube; CHUNK_SIZE],
     chunk_mesh: ChunkMesh
 }
 
 impl Chunk {
-    pub fn new(graphics: &Graphics) -> Self {
+    pub fn new(graphics: &Graphics, x: i32, y: i32, z: i32) -> Self {
         let default = Cube::default();
         let mut voxels: [Cube; CHUNK_SIZE] = [default; CHUNK_SIZE];
 
-        let instances = Chunk::filter_quads(&mut voxels);
+        let instances = Chunk::create_quads(&mut voxels, x, y, z);
 
         let chunk_mesh = ChunkMesh::new(&graphics, quad::VERTICES, quad::INDICES, instances);
         Self {
+            pos: [x, y, z],
             voxels,
             chunk_mesh
         }
     }
 
-    fn filter_quads(voxels: &mut [Cube; CHUNK_SIZE]) -> Vec<Quad> {
+    fn create_quads(voxels: &mut [Cube; CHUNK_SIZE], pos_x: i32, pos_y: i32, pos_z: i32) -> Vec<Quad> {
         let mut faces: Vec<Quad> = Vec::new();
+        // Filtering unseen faces.
         for y in 0..16 {
             for z in 0..16 {
                 for x in 0..16 {
@@ -71,12 +75,16 @@ impl Chunk {
                     );
                     faces.append(
                         &mut voxels[x + 16 * z + 16 * 16 * y]
-                            .get_faces([x as f32, y as f32, z as f32]),
+                            .get_faces([pos_x + x as i32, pos_z + z as i32, pos_y + y as i32]),
                     );
                 }
             }
         }
         return faces;
+    }
+
+    pub fn get_cube(&self, x: u32, y: u32, z: u32) -> &Cube {
+        self.voxels.get(x + 16 * z + 16 * 16 * y).unwrap()
     }
 
     pub fn render<'a>(&'a self, pass: &mut wgpu::RenderPass<'a>) {

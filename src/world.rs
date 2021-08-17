@@ -2,12 +2,12 @@ use crate::renderer::{Renderable, Renderer};
 use wgpu::RenderPass;
 use crate::pipeline::Type;
 use std::collections::HashMap;
-use crate::chunk::Chunk;
+use crate::chunk::{Chunk, ChunkManager};
 use crate::graphics::Graphics;
 
 pub struct World {
-    chunks: Vec<Chunk>,
-    active_chunks: Vec<[u32; 3]>
+    regions: HashMap<(i32, i32, i32), Chunk>,
+    active_chunks: Vec<u32>
 }
 
 impl Renderable for World {
@@ -22,7 +22,7 @@ impl Renderable for World {
 
 impl World {
     pub fn new(graphics: &Graphics) -> Self {
-        let chunks = Vec::new();
+        let chunks = ChunkManager::init();
         let active_chunks = Vec::new();
         Self {
             chunks,
@@ -30,9 +30,8 @@ impl World {
         }
     }
 
-    pub fn add_test(&mut self, x: u32, y: u32, z: u32, graphics: &Graphics) {
-        self.chunks.insert(to_chunk_pos(x, y, z), Chunk::new(&graphics));
-        self.active_chunks.push([x, y, z]);
+    pub fn add_test(&mut self, x: i32, y: i32, z: i32, graphics: &Graphics) {
+        self.chunks.add_chunk(Chunk::new(&graphics, x, y, z));
     }
 
     pub fn get_chunk(&mut self, x: u32, y: u32, z: u32) -> &Chunk {

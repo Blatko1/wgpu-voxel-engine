@@ -44,7 +44,7 @@ impl Cube {
         }
     }
 
-    pub fn get_faces(&self, position: [f32; 3]) -> Vec<Quad> {
+    pub fn get_faces(&self, position: [i32; 3]) -> Vec<Quad> {
         let mut quads = Vec::new();
         if self.back_face {
             quads.push(Quad::new(
