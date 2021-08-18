@@ -14,6 +14,9 @@ mod quad;
 mod cube;
 mod instance;
 mod region;
+mod coordinate;
+mod uniform;
+mod camera;
 
 use engine::Engine;
 use graphics::Graphics;

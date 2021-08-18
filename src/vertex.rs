@@ -3,7 +3,7 @@ use wgpu::VertexBufferLayout;
 #[repr(C)]
 #[derive(bytemuck::Pod, bytemuck::Zeroable, Copy, Clone, Debug)]
 pub struct Vertex {
-    pub(crate) position: [f32; 3],
+    pub position: [f32; 3],
 }
 
 impl Vertex {

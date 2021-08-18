@@ -4,6 +4,7 @@ use crate::vertex::Vertex;
 use crate::quad::{self, Quad};
 use crate::cube::Cube;
 use std::collections::HashMap;
+use crate::coordinate::{UCoord3D, Coord3D, ChunkCoord3D};
 
 const CHUNK_LENGTH: usize = 16;
 const CHUNK_WIDTH: usize = 16;
@@ -12,27 +13,27 @@ const CHUNK_HEIGHT: usize = 16;
 const CHUNK_SIZE: usize = CHUNK_WIDTH * CHUNK_LENGTH * CHUNK_HEIGHT;
 
 pub struct Chunk {
-    pos: [i32; 3],
+    pos: ChunkCoord3D,
     voxels: [Cube; CHUNK_SIZE],
     chunk_mesh: ChunkMesh
 }
 
 impl Chunk {
-    pub fn new(graphics: &Graphics, x: i32, y: i32, z: i32) -> Self {
+    pub fn new(graphics: &Graphics, coord: Coord3D) -> Self {
         let default = Cube::default();
         let mut voxels: [Cube; CHUNK_SIZE] = [default; CHUNK_SIZE];
 
-        let instances = Chunk::create_quads(&mut voxels, x, y, z);
+        let instances = Chunk::create_quads(&mut voxels, coord);
 
         let chunk_mesh = ChunkMesh::new(&graphics, quad::VERTICES, quad::INDICES, instances);
         Self {
-            pos: [x, y, z],
+            pos: coord.to_chunk_coord(),
             voxels,
-            chunk_mesh
+            chunk_mesh,
         }
     }
 
-    fn create_quads(voxels: &mut [Cube; CHUNK_SIZE], pos_x: i32, pos_y: i32, pos_z: i32) -> Vec<Quad> {
+    fn create_quads(voxels: &mut [Cube; CHUNK_SIZE], coord: Coord3D) -> Vec<Quad> {
         let mut faces: Vec<Quad> = Vec::new();
         // Filtering unseen faces.
         for y in 0..16 {
@@ -75,7 +76,7 @@ impl Chunk {
                     );
                     faces.append(
                         &mut voxels[x + 16 * z + 16 * 16 * y]
-                            .get_faces([pos_x + x as i32, pos_z + z as i32, pos_y + y as i32]),
+                            .get_faces([coord.x + x as i32, coord.z + z as i32, coord.y + y as i32]),
                     );
                 }
             }
@@ -83,8 +84,8 @@ impl Chunk {
         return faces;
     }
 
-    pub fn get_cube(&self, x: u32, y: u32, z: u32) -> &Cube {
-        self.voxels.get(x + 16 * z + 16 * 16 * y).unwrap()
+    pub fn get_cube(&self, coord: Coord3D) -> &Cube {
+        self.voxels.get(coord.to_index()).unwrap()
     }
 
     pub fn render<'a>(&'a self, pass: &mut wgpu::RenderPass<'a>) {

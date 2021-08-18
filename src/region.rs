@@ -1,41 +1,40 @@
-use crate::chunk::{ChunkManager, Chunk};
-
-const REGION_LENGTH: usize = 16;
-const REGION_WIDTH: usize = 16;
-const REGION_HEIGHT: usize = 16;
-
-const REGION_SIZE: usize = REGION_WIDTH * REGION_LENGTH * REGION_HEIGHT;
+use crate::chunk::Chunk;
+use crate::coordinate::{UCoord3D, Coord3D, RegionCoord3D, ChunkCoord3D};
 
 pub struct Region {
+    pos: RegionCoord3D,
     chunks: Vec<Chunk>,
-    active_chunks: Vec<usize>
+    active_chunks: Vec<ChunkCoord3D>
 }
 
 impl Region {
-    pub fn new() -> Self {
+    pub fn new(pos: Coord3D) -> Self {
         let chunks = Vec::new();
         let active_chunks = Vec::new();
         Self {
+            pos,
             chunks,
             active_chunks
         }
     }
 
-    pub fn add_chunk(&mut self, x: u32, y: u32, z: u32, chunk: Chunk) {
-        let raw = coords_to_raw(x, y, z);
-        self.chunks.insert(raw, chunk);
-        self.active_chunks.push(raw);
+    pub fn render<'a>(&'a self, pass: &mut wgpu::RenderPass<'a>) {
+        for a in &self.active_chunks {
+            self.chunks.get(a.to_index()).unwrap().render(pass);
+        }
     }
 
-    pub fn get_chunk(&self, x: u32, y: u32, z: u32) -> &Chunk {
-        self.chunks.get(coords_to_raw(x, y, z)).unwrap()
+    pub fn add_chunk(&mut self, coord: Coord3D, chunk: Chunk) {
+        let index = coord.to_chunk_coord();
+        self.chunks.insert(index.to_index(), chunk);
+        self.active_chunks.push(index);
     }
 
-    pub fn remove_active_chunk(&mut self, x: u32, y: u32, z: u32) {
-        self.active_chunks.remove(coords_to_raw(x, y, z));
+    pub fn get_chunk(&self, coord: UCoord3D) -> &Chunk {
+        self.chunks.get(coord.to_chunk_index()).unwrap()
     }
-}
 
-fn coords_to_raw(x: u32, y: u32, z: u32) -> usize {
-    (x + z * REGION_WIDTH + y * REGION_LENGTH * REGION_HEIGHT) as usize
+    pub fn remove_active_chunk(&mut self, coord: UCoord3D) {
+        self.active_chunks.remove(coord.to_chunk_index());
+    }
 }

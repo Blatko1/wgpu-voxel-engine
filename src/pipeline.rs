@@ -3,6 +3,7 @@ use std::fs;
 use std::path::Path;
 use crate::vertex::Vertex;
 use crate::instance::InstanceRaw;
+use crate::uniform::UniformManager;
 
 pub struct Pipeline {
     pub pipeline: wgpu::RenderPipeline,
@@ -83,7 +84,7 @@ impl Pipeline {
         Self { pipeline }
     }
 
-    pub fn main_pipeline(graphics: &Graphics) -> Pipeline {
+    pub fn main_pipeline(graphics: &Graphics, uniform: &UniformManager) -> Pipeline {
         let shader_dir = std::path::Path::new(std::env::current_dir().unwrap().as_os_str()).join("src/shaders");
         let bind_group_layouts: Vec<&wgpu::BindGroupLayout> = vec![];
         let vertex_buffer_layouts = vec![Vertex::init_buffer_layout(), InstanceRaw::init_buffer_layout()];

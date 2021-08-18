@@ -8,9 +8,9 @@ pub struct Quad {
 }
 
 impl Quad {
-    pub fn new(position: [i32; 3], rotation: Rotation3<f32>) -> Self {
+    pub fn new(pos: [i32; 3], rotation: Rotation3<f32>) -> Self {
         Quad {
-            position: Translation3::from(position as [f32; 3]),
+            position: Translation3::from([pos[0] as f32, pos[1] as f32, pos[2] as f32]),
             rotation
         }
     }

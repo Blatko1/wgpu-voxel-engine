@@ -2,43 +2,40 @@ use crate::renderer::{Renderable, Renderer};
 use wgpu::RenderPass;
 use crate::pipeline::Type;
 use std::collections::HashMap;
-use crate::chunk::{Chunk, ChunkManager};
 use crate::graphics::Graphics;
+use crate::region::Region;
+use crate::coordinate::{Coord3D, RegionCoord3D};
 
 pub struct World {
-    regions: HashMap<(i32, i32, i32), Chunk>,
-    active_chunks: Vec<u32>
+    regions: HashMap<RegionCoord3D, Region>,
+    active_regions: Vec<RegionCoord3D>
 }
 
 impl Renderable for World {
     fn render<'a>(&'a self, pass: &mut RenderPass<'a>, renderer: &'a Renderer) {
         pass.set_pipeline(&renderer.pipelines.get(&Type::Main).unwrap().pipeline);
 
-        for p in &self.active_chunks {
-            self.chunks.get(to_chunk_pos(p[0], p[1], p[2])).unwrap().render(pass);
+        for p in &self.active_regions {
+            self.regions.get(p).unwrap().render(pass);
         }
     }
 }
 
 impl World {
     pub fn new(graphics: &Graphics) -> Self {
-        let chunks = ChunkManager::init();
-        let active_chunks = Vec::new();
+        let regions = HashMap::new();
+        let active_regions = Vec::new();
         Self {
-            chunks,
-            active_chunks
+            regions,
+            active_regions
         }
     }
 
-    pub fn add_test(&mut self, x: i32, y: i32, z: i32, graphics: &Graphics) {
-        self.chunks.add_chunk(Chunk::new(&graphics, x, y, z));
+    pub fn add_region(&mut self, coord: Coord3D) {
+        self.regions.insert(coord.to_region_coord(), Region::new(coord.to_region_coord()));
     }
 
-    pub fn get_chunk(&mut self, x: u32, y: u32, z: u32) -> &Chunk {
-        &self.chunks.get(to_chunk_pos(x, y, z)).unwrap()
+    pub fn get_region(&mut self, coord: &Coord3D) -> &Region {
+        &self.regions.get(&coord.to_region_coord()).unwrap()
     }
-}
-
-fn to_chunk_pos(x: u32, y: u32, z: u32) -> usize {
-    (x + 16 * z + 16 * 16 * y) as usize
 }

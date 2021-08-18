@@ -1,15 +1,16 @@
 use crate::graphics::Graphics;
 use crate::pipeline::{Pipeline, Type};
 use std::collections::HashMap;
+use crate::uniform::UniformManager;
 
 pub struct Renderer {
     pub pipelines: HashMap<Type, Pipeline>,
 }
 
 impl Renderer {
-    pub fn new(graphics: &Graphics) -> Self {
+    pub fn new(graphics: &Graphics, uniforms: &UniformManager) -> Self {
         let mut pipelines = HashMap::new();
-        pipelines.insert(Type::Main, Pipeline::main_pipeline(&graphics));
+        pipelines.insert(Type::Main, Pipeline::main_pipeline(&graphics, uniforms));
         Self { pipelines }
     }
 
