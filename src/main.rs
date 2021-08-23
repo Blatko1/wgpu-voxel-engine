@@ -34,7 +34,11 @@ impl Client {
         Self { graphics, engine }
     }
 
-    fn render(&self) -> Result<(), wgpu::SwapChainError> {
+    fn render(&mut self) -> Result<(), wgpu::SwapChainError> {
+        //Updating
+        self.engine.update(&self.graphics);
+
+        //Rendering
         self.engine.render(&self.graphics)?;
         Ok(())
     }

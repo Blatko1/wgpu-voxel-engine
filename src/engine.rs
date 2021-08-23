@@ -27,8 +27,9 @@ impl Engine {
         }
     }
 
-    pub fn update(&mut self) {
-        self.uniforms.update(&self.camera);
+    pub fn update(&mut self, graphics: &Graphics) {
+        self.camera.update();
+        self.uniforms.update(&self.camera, &graphics);
     }
 
     pub fn render(&self, graphics: &Graphics) -> Result<(), wgpu::SwapChainError> {

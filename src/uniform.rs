@@ -14,8 +14,8 @@ impl UniformManager {
         Self { global_matrix }
     }
 
-    pub fn update(&mut self, camera: &Camera) {
-        self.global_matrix.update(&camera);
+    pub fn update(&mut self, camera: &Camera, graphics: &Graphics) {
+        self.global_matrix.update(&camera, &graphics);
     }
 
     pub fn bind_group_layouts(&self) -> Vec<&wgpu::BindGroupLayout> {
@@ -96,8 +96,11 @@ impl GlobalMatrix {
         }
     }
 
-    fn update(&mut self, camera: &Camera) {
+    fn update(&mut self, camera: &Camera, graphics: &Graphics) {
         self.data = camera.create_global_matrix();
+        graphics
+            .queue
+            .write_buffer(&self.buffer, 0, bytemuck::cast_slice(&[self.data]));
     }
 
     fn get_layout(&self) -> &wgpu::BindGroupLayout {

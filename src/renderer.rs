@@ -1,8 +1,8 @@
 use crate::graphics::Graphics;
 use crate::pipeline::{Pipeline, Type};
 use crate::uniform::UniformManager;
-use std::collections::HashMap;
 use crate::world::World;
+use std::collections::HashMap;
 
 pub struct Renderer {
     pub pipelines: HashMap<Type, Pipeline>,
