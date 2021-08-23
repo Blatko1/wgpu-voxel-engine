@@ -1,6 +1,6 @@
-use crate::instance::InstanceRaw;
-use crate::vertex::Vertex;
 use nalgebra::{Rotation3, Translation3};
+use crate::renderer::instance::InstanceRaw;
+use crate::renderer::vertex::Vertex;
 
 pub struct Quad {
     position: Translation3<f32>,

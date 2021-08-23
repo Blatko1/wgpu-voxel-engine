@@ -1,5 +1,3 @@
-use wgpu::VertexBufferLayout;
-
 #[repr(C)]
 #[derive(bytemuck::Pod, bytemuck::Zeroable, Copy, Clone, Debug)]
 pub struct Vertex {

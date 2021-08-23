@@ -1,11 +1,10 @@
-use crate::coordinate::{ChunkCoord3D, Coord3D, UCoord3D};
+use crate::coordinate::{ChunkCoord3D, Coord3D};
 use crate::cube::Cube;
-use crate::graphics::Graphics;
 use crate::quad::{self, Quad};
 use crate::uniform::{SetUniforms, UniformManager};
-use crate::vertex::Vertex;
-use std::collections::HashMap;
 use wgpu::util::DeviceExt;
+use crate::renderer::graphics::Graphics;
+use crate::renderer::vertex::Vertex;
 
 const CHUNK_LENGTH: usize = 16;
 const CHUNK_WIDTH: usize = 16;

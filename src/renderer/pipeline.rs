@@ -1,10 +1,9 @@
-use crate::graphics::Graphics;
-use crate::instance::InstanceRaw;
 use crate::uniform::UniformManager;
-use crate::vertex::Vertex;
 use std::fs;
 use std::path::Path;
 use crate::texture::Texture;
+use super::graphics::Graphics;
+use super::vertex::Vertex;
 
 pub struct Pipeline {
     pub pipeline: wgpu::RenderPipeline,

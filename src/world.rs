@@ -1,11 +1,11 @@
 use crate::chunk::Chunk;
-use crate::coordinate::{ChunkCoord3D, Coord3D, RegionCoord3D};
-use crate::graphics::Graphics;
-use crate::pipeline::Type;
-use crate::renderer::{Renderable, Renderer};
+use crate::coordinate::{ChunkCoord3D, Coord3D};
 use crate::uniform::UniformManager;
 use std::collections::HashMap;
 use wgpu::RenderPass;
+use crate::renderer::renderer::{Renderer, Renderable};
+use crate::renderer::pipeline::Type;
+use crate::renderer::graphics::Graphics;
 
 pub struct World {
     chunks: HashMap<ChunkCoord3D, Chunk>,
@@ -28,7 +28,7 @@ impl Renderable for World {
 }
 
 impl World {
-    pub fn new(graphics: &Graphics) -> Self {
+    pub fn new() -> Self {
         let chunks = HashMap::new();
         let active_chunks = Vec::new();
         Self {

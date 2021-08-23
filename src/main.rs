@@ -3,24 +3,20 @@ use winit::event::{ElementState, Event, KeyboardInput, MouseButton, VirtualKeyCo
 use winit::event_loop::{ControlFlow, EventLoop};
 use winit::window::WindowBuilder;
 
+mod renderer;
 mod camera;
 mod chunk;
 mod coordinate;
 mod cube;
 mod engine;
-mod graphics;
-mod instance;
-mod pipeline;
 mod quad;
 mod region;
-mod renderer;
 mod uniform;
-mod vertex;
 mod world;
 mod texture;
 
 use engine::Engine;
-use graphics::Graphics;
+use crate::renderer::graphics::Graphics;
 
 struct Client {
     graphics: Graphics,

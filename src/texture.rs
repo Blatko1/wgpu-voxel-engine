@@ -1,4 +1,4 @@
-use crate::graphics::Graphics;
+use crate::renderer::graphics::Graphics;
 
 pub struct Texture {
 

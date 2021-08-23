@@ -1,7 +1,7 @@
-use crate::graphics::Graphics;
 use crate::uniform::MatrixData;
 use nalgebra::{Matrix4, Point3, Vector3};
 use winit::event::{DeviceEvent, KeyboardInput, VirtualKeyCode, MouseScrollDelta};
+use crate::renderer::graphics::Graphics;
 
 pub struct Camera {
     eye: Point3<f32>,

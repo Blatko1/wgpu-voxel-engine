@@ -1,9 +1,8 @@
 use crate::camera::Camera;
-use crate::coordinate::Coord3D;
-use crate::graphics::Graphics;
-use crate::renderer::Renderer;
 use crate::uniform::UniformManager;
 use crate::world::World;
+use crate::renderer::renderer::Renderer;
+use crate::renderer::graphics::Graphics;
 
 pub struct Engine {
     renderer: Renderer,
@@ -17,7 +16,7 @@ impl Engine {
         let camera = Camera::new(&graphics);
         let uniforms = UniformManager::new(&graphics, &camera);
         let renderer = Renderer::new(&graphics, &uniforms);
-        let mut world = World::new(&graphics);
+        let mut world = World::new();
         world.add_quad(&graphics);
         Self {
             renderer,

@@ -1,7 +1,6 @@
 use crate::camera::Camera;
-use crate::graphics::Graphics;
-use std::collections::HashMap;
 use wgpu::util::DeviceExt;
+use crate::renderer::graphics::Graphics;
 
 pub struct UniformManager {
     global_matrix: GlobalMatrix,

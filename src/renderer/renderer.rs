@@ -1,9 +1,9 @@
-use crate::graphics::Graphics;
-use crate::pipeline::{Pipeline, Type};
 use crate::uniform::UniformManager;
 use crate::world::World;
 use std::collections::HashMap;
 use crate::texture::Texture;
+use super::pipeline::{Type, Pipeline};
+use super::graphics::Graphics;
 
 pub struct Renderer {
     pub pipelines: HashMap<Type, Pipeline>,
