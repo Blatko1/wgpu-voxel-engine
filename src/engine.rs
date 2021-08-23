@@ -27,7 +27,9 @@ impl Engine {
         }
     }
 
-    pub fn update(&self) {}
+    pub fn update(&mut self) {
+        self.uniforms.update(&self.camera);
+    }
 
     pub fn render(&self, graphics: &Graphics) -> Result<(), wgpu::SwapChainError> {
         self.renderer
@@ -38,5 +40,9 @@ impl Engine {
     pub fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>, graphics: &mut Graphics) {
         graphics.resize(new_size);
         self.camera.resize(&graphics);
+    }
+
+    pub fn input(&mut self, event: &winit::event::DeviceEvent) {
+        self.camera.input(event);
     }
 }

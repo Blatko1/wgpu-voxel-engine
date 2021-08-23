@@ -94,7 +94,7 @@ fn main() {
                 }
                 _ => (),
             },
-            Event::DeviceEvent { event, .. } if focus => (),
+            Event::DeviceEvent { event, .. } if focus => client.engine.input(&event),
             Event::MainEventsCleared => window.request_redraw(),
 
             Event::RedrawRequested(_) => {

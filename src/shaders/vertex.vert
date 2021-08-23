@@ -10,6 +10,6 @@ layout(set = 0, binding = 0) uniform GlobalMatrix {
 layout(location = 0) out vec3 fColor;
 
 void main(void) {
-    gl_Position = /*matrix */ vec4(pos, 1.0);
+    gl_Position = matrix * vec4(pos, 1.0);
     fColor = color;
 }
