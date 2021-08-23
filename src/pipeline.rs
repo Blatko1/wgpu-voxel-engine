@@ -4,6 +4,7 @@ use crate::uniform::UniformManager;
 use crate::vertex::Vertex;
 use std::fs;
 use std::path::Path;
+use crate::texture::Texture;
 
 pub struct Pipeline {
     pub pipeline: wgpu::RenderPipeline,
@@ -98,7 +99,7 @@ impl Pipeline {
             shader_dir.join("fragment.frag.spv"),
             bind_group_layouts,
             vertex_buffer_layouts,
-            None,
+            Some(Texture::DEPTH_FORMAT),
         )
     }
 }

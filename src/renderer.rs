@@ -3,16 +3,19 @@ use crate::pipeline::{Pipeline, Type};
 use crate::uniform::UniformManager;
 use crate::world::World;
 use std::collections::HashMap;
+use crate::texture::Texture;
 
 pub struct Renderer {
     pub pipelines: HashMap<Type, Pipeline>,
+    depth_texture_view: wgpu::TextureView
 }
 
 impl Renderer {
     pub fn new(graphics: &Graphics, uniforms: &UniformManager) -> Self {
         let mut pipelines = HashMap::new();
         pipelines.insert(Type::Main, Pipeline::main_pipeline(&graphics, uniforms));
-        Self { pipelines }
+        let depth_texture_view = Texture::create_depth_texture_view(&graphics);
+        Self { pipelines, depth_texture_view }
     }
 
     pub fn render(
@@ -27,7 +30,7 @@ impl Renderer {
                 label: Some("Main Command Encoder"),
             });
         let view = &graphics.swap_chain.get_current_frame()?.output.view;
-        let render_pass_builder = RenderPassBuilder::init(view);
+        let render_pass_builder = RenderPassBuilder::init(view, &self.depth_texture_view);
         {
             let desc = render_pass_builder.build();
             let mut pass = encoder.begin_render_pass(&desc);
@@ -53,9 +56,9 @@ struct RenderPassBuilder<'a> {
 }
 
 impl<'a> RenderPassBuilder<'a> {
-    fn init(view: &'a wgpu::TextureView) -> Self {
+    fn init(frame_view: &'a wgpu::TextureView, depth_view: &'a wgpu::TextureView) -> Self {
         let color_attachments = vec![wgpu::RenderPassColorAttachment {
-            view,
+            view: frame_view,
             resolve_target: None,
             ops: wgpu::Operations {
                 load: wgpu::LoadOp::Clear(wgpu::Color {
@@ -67,17 +70,15 @@ impl<'a> RenderPassBuilder<'a> {
                 store: true,
             },
         }];
-        /*
-        Some(wgpu::RenderPassDepthStencilAttachment {
-            view,
+
+        let depth_attachment = Some(wgpu::RenderPassDepthStencilAttachment {
+            view: depth_view,
             depth_ops: Some(wgpu::Operations {
                 load: wgpu::LoadOp::Clear(1.0),
                 store: true,
             }),
             stencil_ops: None,
-        })
-         */
-        let depth_attachment = None;
+        });
         Self {
             color_attachments,
             depth_attachment,

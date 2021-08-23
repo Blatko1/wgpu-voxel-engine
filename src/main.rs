@@ -17,6 +17,7 @@ mod renderer;
 mod uniform;
 mod vertex;
 mod world;
+mod texture;
 
 use engine::Engine;
 use graphics::Graphics;
