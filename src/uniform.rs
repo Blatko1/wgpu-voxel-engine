@@ -20,14 +20,21 @@ impl UniformManager {
         self.global_matrix.update(&camera);
     }
 
-    pub fn get_layouts(&self, items: &[LayoutType]) -> Vec<&wgpu::BindGroupLayout> {
+    pub fn bind_group_layouts(&self) -> Vec<&wgpu::BindGroupLayout> {
         let mut layouts = Vec::new();
-        for i in items {
-            match i {
-                LayoutType::GlobalMatrix => layouts.push(&self.global_matrix.bind_group_layout)
-            }
-        }
+        layouts.push(&self.global_matrix.bind_group_layout);
         layouts
+    }
+
+}
+
+pub trait SetUniforms<'a> {
+    fn set_bind_groups(&mut self, uniform: &'a UniformManager);
+}
+
+impl<'a> SetUniforms<'a> for wgpu::RenderPass<'a> {
+    fn set_bind_groups(&mut self, uniform: &'a UniformManager) {
+        self.set_bind_group(0, &uniform.global_matrix.bind_group, &[]);
     }
 }
 

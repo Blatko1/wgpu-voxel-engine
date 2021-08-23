@@ -38,6 +38,10 @@ impl Client {
         self.engine.render(&self.graphics)?;
         Ok(())
     }
+
+    fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
+        self.engine.resize(new_size, &mut self.graphics);
+    }
 }
 
 fn main() {
@@ -47,7 +51,7 @@ fn main() {
 
     window.set_title("wgpu voxel engine");
 
-    let client = Client::new(&window);
+    let mut client = Client::new(&window);
     let mut focus = false;
 
     event_loop.run(move |event, _, control_flow| {
@@ -84,8 +88,8 @@ fn main() {
                     }
                     _ => (),
                 },
-                WindowEvent::Resized(_) => {}
-                WindowEvent::ScaleFactorChanged { .. } => {}
+                WindowEvent::Resized(new_size) => client.resize(new_size),
+                WindowEvent::ScaleFactorChanged { new_inner_size ,.. } => client.resize(*new_inner_size),
                 _ => (),
             },
             Event::DeviceEvent { event, .. } if focus => (),
@@ -95,7 +99,7 @@ fn main() {
                 match client.render() {
                     Ok(_) => {}
                     // Recreate the swap_chain if lost
-                    Err(wgpu::SwapChainError::Lost) => client.engine.resize(client.graphics.size),
+                    Err(wgpu::SwapChainError::Lost) => client.resize(client.graphics.size),
                     // The system is out of memory, we should probably quit
                     Err(wgpu::SwapChainError::OutOfMemory) => *control_flow = ControlFlow::Exit,
                     // All other errors (Outdated, Timeout) should be resolved by the next frame

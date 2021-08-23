@@ -8,7 +8,8 @@ use crate::camera::Camera;
 pub struct Engine {
     renderer: Renderer,
     world: World,
-    uniforms: UniformManager
+    uniforms: UniformManager,
+    camera: Camera
 }
 
 impl Engine {
@@ -17,8 +18,8 @@ impl Engine {
         let uniforms = UniformManager::new(&graphics, &camera);
         let renderer = Renderer::new(&graphics, &uniforms);
         let mut world = World::new(&graphics);
-        world.add_region(Coord3D::new(0, 2,0));
-        Self { renderer, world, uniforms }
+        world.add_quad(&graphics);
+        Self { renderer, world, uniforms, camera }
     }
 
     pub fn update(&self) {
@@ -26,9 +27,12 @@ impl Engine {
     }
 
     pub fn render(&self, graphics: &Graphics) -> Result<(), wgpu::SwapChainError> {
-        self.renderer.render(&graphics, &[&self.world])?;
+        self.renderer.render(&graphics, &[&self.world], &self.uniforms)?;
         Ok(())
     }
 
-    pub fn resize(&self, size: winit::dpi::PhysicalSize<u32>) {}
+    pub fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>, graphics: &mut Graphics) {
+        graphics.resize(new_size);
+        self.camera.resize(&graphics);
+    }
 }

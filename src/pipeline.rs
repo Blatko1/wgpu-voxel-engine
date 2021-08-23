@@ -86,8 +86,8 @@ impl Pipeline {
 
     pub fn main_pipeline(graphics: &Graphics, uniform: &UniformManager) -> Pipeline {
         let shader_dir = std::path::Path::new(std::env::current_dir().unwrap().as_os_str()).join("src/shaders");
-        let bind_group_layouts: Vec<&wgpu::BindGroupLayout> = vec![];
-        let vertex_buffer_layouts = vec![Vertex::init_buffer_layout(), InstanceRaw::init_buffer_layout()];
+        let bind_group_layouts = uniform.bind_group_layouts();
+        let vertex_buffer_layouts = vec![Vertex::init_buffer_layout()/*, InstanceRaw::init_buffer_layout()*/];
         Pipeline::new(
             &graphics,
             "main",

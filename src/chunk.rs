@@ -5,6 +5,7 @@ use crate::quad::{self, Quad};
 use crate::cube::Cube;
 use std::collections::HashMap;
 use crate::coordinate::{UCoord3D, Coord3D, ChunkCoord3D};
+use crate::uniform::{UniformManager, SetUniforms};
 
 const CHUNK_LENGTH: usize = 16;
 const CHUNK_WIDTH: usize = 16;
@@ -88,8 +89,8 @@ impl Chunk {
         self.voxels.get(coord.to_index()).unwrap()
     }
 
-    pub fn render<'a>(&'a self, pass: &mut wgpu::RenderPass<'a>) {
-        self.chunk_mesh.render(pass);
+    pub fn render<'a>(&'a self, pass: &mut wgpu::RenderPass<'a>, uniform: &'a UniformManager) {
+        self.chunk_mesh.render(pass, &uniform);
     }
 }
 
@@ -130,9 +131,10 @@ impl ChunkMesh {
         }
     }
 
-    fn render<'a>(&'a self, pass: &mut wgpu::RenderPass<'a>) {
+    fn render<'a>(&'a self, pass: &mut wgpu::RenderPass<'a>, uniform: &'a UniformManager) {
         pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
         pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint32);
+        pass.set_bind_groups(&uniform);
         pass.draw_indexed(0..self.indices_len as _, 0, 0..1);   //self.instances_len as _
     }
 }

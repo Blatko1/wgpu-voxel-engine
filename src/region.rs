@@ -1,4 +1,4 @@
-use crate::chunk::Chunk;
+/*use crate::chunk::Chunk;
 use crate::coordinate::{UCoord3D, Coord3D, RegionCoord3D, ChunkCoord3D};
 
 pub struct Region {
@@ -37,4 +37,4 @@ impl Region {
     pub fn remove_active_chunk(&mut self, coord: UCoord3D) {
         self.active_chunks.remove(coord.to_chunk_index());
     }
-}
+}*/

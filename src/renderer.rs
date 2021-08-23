@@ -17,7 +17,7 @@ impl Renderer {
     pub fn render<T: Renderable>(
         &self,
         graphics: &Graphics,
-        items: &[&T],
+        items: &[&T], uniform: &UniformManager
     ) -> Result<(), wgpu::SwapChainError> {
         let mut encoder = graphics
             .device
@@ -29,7 +29,7 @@ impl Renderer {
         for i in items {
             let desc = render_pass_builder.build();
             let mut pass = encoder.begin_render_pass(&desc);
-            i.render(&mut pass, &self);
+            i.render(&mut pass, &self, &uniform);
         }
         graphics.queue.submit(Some(encoder.finish()));
 
@@ -38,7 +38,7 @@ impl Renderer {
 }
 
 pub trait Renderable {
-    fn render<'a>(&'a self, pass: &mut wgpu::RenderPass<'a>, renderer: &'a Renderer);
+    fn render<'a>(&'a self, pass: &mut wgpu::RenderPass<'a>, renderer: &'a Renderer, uniform: &'a UniformManager);
 }
 
 struct RenderPassBuilder<'a> {

@@ -3,10 +3,10 @@ use crate::graphics::Graphics;
 use crate::uniform::MatrixData;
 
 pub struct Camera {
-    pub eye: Point3<f32>,
+    eye: Point3<f32>,
     target: Point3<f32>,
     up: Vector3<f32>,
-    pub aspect: f32,
+    aspect: f32,
     fov: f32,
     near: f32,
     far: f32,
@@ -23,8 +23,8 @@ const OPENGL_TO_WGPU_MATRIX: Matrix4<f32> = Matrix4::new(
 impl Camera {
     pub fn new(graphics: &Graphics) -> Self {
         Self {
-            eye: Point3::new(0., 0., 3.),
-            target: Point3::new(0., 0., 1.),
+            eye: Point3::new(0., 0., 1.),
+            target: Point3::new(0., 0., -1.),
             up: Vector3::y(),
             aspect: graphics.sc_desc.width as f32 / graphics.sc_desc.height as f32,
             fov: 60.,
@@ -39,7 +39,12 @@ impl Camera {
         let data = MatrixData {
             proj_view_model_matrix: result
         };
+        println!("{:?}", data);
         return data;
+    }
+
+    pub fn resize(&mut self, graphics: &Graphics) {
+        self.aspect = graphics.sc_desc.width as f32 / graphics.sc_desc.height as f32;
     }
 
 }
