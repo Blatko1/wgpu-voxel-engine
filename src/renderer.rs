@@ -1,7 +1,8 @@
 use crate::graphics::Graphics;
 use crate::pipeline::{Pipeline, Type};
-use std::collections::HashMap;
 use crate::uniform::UniformManager;
+use std::collections::HashMap;
+use crate::world::World;
 
 pub struct Renderer {
     pub pipelines: HashMap<Type, Pipeline>,
@@ -14,10 +15,11 @@ impl Renderer {
         Self { pipelines }
     }
 
-    pub fn render<T: Renderable>(
+    pub fn render(
         &self,
         graphics: &Graphics,
-        items: &[&T], uniform: &UniformManager
+        world: &World,
+        uniform: &UniformManager,
     ) -> Result<(), wgpu::SwapChainError> {
         let mut encoder = graphics
             .device
@@ -26,19 +28,23 @@ impl Renderer {
             });
         let view = &graphics.swap_chain.get_current_frame()?.output.view;
         let render_pass_builder = RenderPassBuilder::init(view);
-        for i in items {
+        {
             let desc = render_pass_builder.build();
             let mut pass = encoder.begin_render_pass(&desc);
-            i.render(&mut pass, &self, &uniform);
+            world.render(&mut pass, &self, &uniform);
         }
         graphics.queue.submit(Some(encoder.finish()));
-
         Ok(())
     }
 }
 
 pub trait Renderable {
-    fn render<'a>(&'a self, pass: &mut wgpu::RenderPass<'a>, renderer: &'a Renderer, uniform: &'a UniformManager);
+    fn render<'a>(
+        &'a self,
+        pass: &mut wgpu::RenderPass<'a>,
+        renderer: &'a Renderer,
+        uniform: &'a UniformManager,
+    );
 }
 
 struct RenderPassBuilder<'a> {
@@ -56,7 +62,7 @@ impl<'a> RenderPassBuilder<'a> {
                     r: 0.1,
                     g: 0.2,
                     b: 0.3,
-                    a: 1.0
+                    a: 1.0,
                 }),
                 store: true,
             },
@@ -77,9 +83,7 @@ impl<'a> RenderPassBuilder<'a> {
             depth_attachment,
         }
     }
-    fn build(
-        &self,
-    ) -> wgpu::RenderPassDescriptor {
+    fn build(&self) -> wgpu::RenderPassDescriptor {
         wgpu::RenderPassDescriptor {
             label: Some("Main Render Pass"),
             color_attachments: &self.color_attachments,

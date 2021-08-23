@@ -3,20 +3,20 @@ use winit::event::{ElementState, Event, KeyboardInput, MouseButton, VirtualKeyCo
 use winit::event_loop::{ControlFlow, EventLoop};
 use winit::window::WindowBuilder;
 
+mod camera;
+mod chunk;
+mod coordinate;
+mod cube;
 mod engine;
 mod graphics;
-mod pipeline;
-mod renderer;
-mod world;
-mod vertex;
-mod chunk;
-mod quad;
-mod cube;
 mod instance;
+mod pipeline;
+mod quad;
 mod region;
-mod coordinate;
+mod renderer;
 mod uniform;
-mod camera;
+mod vertex;
+mod world;
 
 use engine::Engine;
 use graphics::Graphics;
@@ -89,7 +89,9 @@ fn main() {
                     _ => (),
                 },
                 WindowEvent::Resized(new_size) => client.resize(new_size),
-                WindowEvent::ScaleFactorChanged { new_inner_size ,.. } => client.resize(*new_inner_size),
+                WindowEvent::ScaleFactorChanged { new_inner_size, .. } => {
+                    client.resize(*new_inner_size)
+                }
                 _ => (),
             },
             Event::DeviceEvent { event, .. } if focus => (),

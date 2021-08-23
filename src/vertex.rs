@@ -4,7 +4,7 @@ use wgpu::VertexBufferLayout;
 #[derive(bytemuck::Pod, bytemuck::Zeroable, Copy, Clone, Debug)]
 pub struct Vertex {
     pub position: [f32; 3],
-    pub color: [f32; 3]
+    pub color: [f32; 3],
 }
 
 impl Vertex {
@@ -16,14 +16,14 @@ impl Vertex {
                 wgpu::VertexAttribute {
                     format: wgpu::VertexFormat::Float32x3,
                     offset: 0,
-                    shader_location: 0
+                    shader_location: 0,
                 },
                 wgpu::VertexAttribute {
                     format: wgpu::VertexFormat::Float32x3,
                     offset: std::mem::size_of::<[f32; 3]>() as wgpu::BufferAddress,
-                    shader_location: 1
-                }
-            ]
+                    shader_location: 1,
+                },
+            ],
         }
     }
 }

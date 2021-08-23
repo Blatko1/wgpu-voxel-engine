@@ -47,10 +47,7 @@ impl Cube {
     pub fn get_faces(&self, position: [i32; 3]) -> Vec<Quad> {
         let mut quads = Vec::new();
         if self.back_face {
-            quads.push(Quad::new(
-                position,
-                Rotation3::new([0., 0., 0.].into()),
-            ));
+            quads.push(Quad::new(position, Rotation3::new([0., 0., 0.].into())));
         }
         if self.front_face {
             let pitch: f32 = 180.;
@@ -89,7 +86,6 @@ impl Cube {
         }
         return quads;
     }
-
 }
 
 #[derive(Copy, Clone)]

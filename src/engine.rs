@@ -1,15 +1,15 @@
+use crate::camera::Camera;
+use crate::coordinate::Coord3D;
 use crate::graphics::Graphics;
 use crate::renderer::Renderer;
-use crate::world::World;
-use crate::coordinate::Coord3D;
 use crate::uniform::UniformManager;
-use crate::camera::Camera;
+use crate::world::World;
 
 pub struct Engine {
     renderer: Renderer,
     world: World,
     uniforms: UniformManager,
-    camera: Camera
+    camera: Camera,
 }
 
 impl Engine {
@@ -19,15 +19,19 @@ impl Engine {
         let renderer = Renderer::new(&graphics, &uniforms);
         let mut world = World::new(&graphics);
         world.add_quad(&graphics);
-        Self { renderer, world, uniforms, camera }
+        Self {
+            renderer,
+            world,
+            uniforms,
+            camera,
+        }
     }
 
-    pub fn update(&self) {
-
-    }
+    pub fn update(&self) {}
 
     pub fn render(&self, graphics: &Graphics) -> Result<(), wgpu::SwapChainError> {
-        self.renderer.render(&graphics, &[&self.world], &self.uniforms)?;
+        self.renderer
+            .render(&graphics, &self.world, &self.uniforms)?;
         Ok(())
     }
 

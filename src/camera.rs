@@ -1,6 +1,6 @@
-use nalgebra::{Point3, Vector3, Matrix4};
 use crate::graphics::Graphics;
 use crate::uniform::MatrixData;
+use nalgebra::{Matrix4, Point3, Vector3};
 
 pub struct Camera {
     eye: Point3<f32>,
@@ -29,7 +29,7 @@ impl Camera {
             aspect: graphics.sc_desc.width as f32 / graphics.sc_desc.height as f32,
             fov: 60.,
             near: 0.1,
-            far: 100.0
+            far: 100.0,
         }
     }
 
@@ -37,7 +37,7 @@ impl Camera {
         let projection = Matrix4::new_perspective(self.aspect, self.fov, self.near, self.far);
         let result: [[f32; 4]; 4] = (OPENGL_TO_WGPU_MATRIX * projection).into();
         let data = MatrixData {
-            proj_view_model_matrix: result
+            proj_view_model_matrix: result,
         };
         println!("{:?}", data);
         return data;
@@ -46,5 +46,4 @@ impl Camera {
     pub fn resize(&mut self, graphics: &Graphics) {
         self.aspect = graphics.sc_desc.width as f32 / graphics.sc_desc.height as f32;
     }
-
 }
