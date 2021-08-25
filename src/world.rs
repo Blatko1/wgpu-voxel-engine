@@ -1,11 +1,11 @@
 use crate::chunk::Chunk;
 use crate::coordinate::{ChunkCoord3D, Coord3D};
+use crate::renderer::graphics::Graphics;
+use crate::renderer::pipeline::Type;
+use crate::renderer::renderer::{Renderable, Renderer};
 use crate::uniform::UniformManager;
 use std::collections::HashMap;
 use wgpu::RenderPass;
-use crate::renderer::renderer::{Renderer, Renderable};
-use crate::renderer::pipeline::Type;
-use crate::renderer::graphics::Graphics;
 
 pub struct World {
     chunks: HashMap<ChunkCoord3D, Chunk>,

@@ -1,13 +1,13 @@
+use super::graphics::Graphics;
+use super::pipeline::{Pipeline, Type};
+use crate::texture::Texture;
 use crate::uniform::UniformManager;
 use crate::world::World;
 use std::collections::HashMap;
-use crate::texture::Texture;
-use super::pipeline::{Type, Pipeline};
-use super::graphics::Graphics;
 
 pub struct Renderer {
     pub pipelines: HashMap<Type, Pipeline>,
-    depth_texture_view: wgpu::TextureView
+    depth_texture_view: wgpu::TextureView,
 }
 
 impl Renderer {
@@ -15,7 +15,10 @@ impl Renderer {
         let mut pipelines = HashMap::new();
         pipelines.insert(Type::Main, Pipeline::main_pipeline(&graphics, uniforms));
         let depth_texture_view = Texture::create_depth_texture_view(&graphics);
-        Self { pipelines, depth_texture_view }
+        Self {
+            pipelines,
+            depth_texture_view,
+        }
     }
 
     pub fn render(
@@ -38,6 +41,10 @@ impl Renderer {
         }
         graphics.queue.submit(Some(encoder.finish()));
         Ok(())
+    }
+
+    pub fn resize(&mut self, graphics: &Graphics) {
+        self.depth_texture_view = Texture::create_depth_texture_view(&graphics);
     }
 }
 

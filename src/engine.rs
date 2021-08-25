@@ -1,8 +1,8 @@
 use crate::camera::Camera;
+use crate::renderer::graphics::Graphics;
+use crate::renderer::renderer::Renderer;
 use crate::uniform::UniformManager;
 use crate::world::World;
-use crate::renderer::renderer::Renderer;
-use crate::renderer::graphics::Graphics;
 
 pub struct Engine {
     renderer: Renderer,
@@ -40,6 +40,7 @@ impl Engine {
     pub fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>, graphics: &mut Graphics) {
         graphics.resize(new_size);
         self.camera.resize(&graphics);
+        self.renderer.resize(&graphics);
     }
 
     pub fn input(&mut self, event: &winit::event::DeviceEvent) {

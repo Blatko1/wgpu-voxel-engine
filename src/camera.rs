@@ -1,7 +1,7 @@
+use crate::renderer::graphics::Graphics;
 use crate::uniform::MatrixData;
 use nalgebra::{Matrix4, Point3, Vector3};
-use winit::event::{DeviceEvent, KeyboardInput, VirtualKeyCode, MouseScrollDelta};
-use crate::renderer::graphics::Graphics;
+use winit::event::{DeviceEvent, KeyboardInput, MouseScrollDelta, VirtualKeyCode};
 
 pub struct Camera {
     eye: Point3<f32>,
@@ -92,7 +92,7 @@ struct CameraController {
     down: f32,
     yaw: f32,
     pitch: f32,
-    fov_delta: f32
+    fov_delta: f32,
 }
 
 impl CameraController {
@@ -108,7 +108,7 @@ impl CameraController {
             down: 0.,
             yaw: 270.0,
             pitch: 0.0,
-            fov_delta: 0.
+            fov_delta: 0.,
         }
     }
 
@@ -130,10 +130,14 @@ impl CameraController {
                     self.yaw = 360.0;
                 }
             }
-            DeviceEvent::MouseWheel { delta } => self.fov_delta = match delta {
-                MouseScrollDelta::LineDelta(_, scroll) => *scroll,
-                MouseScrollDelta::PixelDelta(winit::dpi::PhysicalPosition { y, ..}) => *y as f32
-            },
+            DeviceEvent::MouseWheel { delta } => {
+                self.fov_delta = match delta {
+                    MouseScrollDelta::LineDelta(_, scroll) => *scroll,
+                    MouseScrollDelta::PixelDelta(winit::dpi::PhysicalPosition { y, .. }) => {
+                        *y as f32
+                    }
+                }
+            }
             DeviceEvent::Motion { .. } => {}
             DeviceEvent::Button { .. } => {}
             DeviceEvent::Key(KeyboardInput {

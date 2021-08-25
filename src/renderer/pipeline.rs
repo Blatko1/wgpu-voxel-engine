@@ -1,9 +1,9 @@
+use super::graphics::Graphics;
+use super::vertex::Vertex;
+use crate::texture::Texture;
 use crate::uniform::UniformManager;
 use std::fs;
 use std::path::Path;
-use crate::texture::Texture;
-use super::graphics::Graphics;
-use super::vertex::Vertex;
 
 pub struct Pipeline {
     pub pipeline: wgpu::RenderPipeline,
@@ -31,7 +31,7 @@ impl Pipeline {
             .create_shader_module(&wgpu::ShaderModuleDescriptor {
                 label: Some(&format!("{} fragment shader", label)),
                 source: wgpu::util::make_spirv(&fs::read(f_shader).unwrap()),
-                flags: wgpu::ShaderFlags::all(),
+                flags: wgpu::ShaderFlags::empty(),
             });
         let layout = graphics
             .device
