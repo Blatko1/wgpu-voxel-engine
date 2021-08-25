@@ -10,6 +10,7 @@ pub struct Cube {
     pub back_face: bool,
     pub front_face: bool,
     pub is_active: bool,
+    texture: CubeType
 }
 
 impl Cube {
@@ -22,6 +23,7 @@ impl Cube {
             back_face: true,
             front_face: true,
             is_active: true,
+            texture: CubeType::GRASS
         }
     }
 
@@ -41,47 +43,49 @@ impl Cube {
             back_face,
             front_face,
             is_active: true,
+            texture: CubeType::GRASS
         }
     }
-
-    pub fn get_faces(&self, position: [i32; 3]) -> Vec<Quad> {
+    // roll = x, yaw = z, pitch = y  IDK WHY!
+    pub fn get_faces(&self, position: [f32; 3]) -> Vec<Quad> {
         let mut quads = Vec::new();
-        if self.back_face {
-            quads.push(Quad::new(position, Rotation3::new([0., 0., 0.].into())));
-        }
+        let index = self.texture as u32;
         if self.front_face {
+            quads.push(Quad::new(position, Rotation3::new([0., 0., 0.].into()), index));
+        }
+        if self.back_face {
             let pitch: f32 = 180.;
             quads.push(Quad::new(
                 position,
-                Rotation3::from_euler_angles(0., pitch.to_radians(), 0.),
+                Rotation3::from_euler_angles(0., pitch.to_radians(), 0.), index
             ))
         }
         if self.left_face {
-            let pitch: f32 = 90.;
-            quads.push(Quad::new(
-                position,
-                Rotation3::from_euler_angles(0., pitch.to_radians(), 0.),
-            ))
-        }
-        if self.right_face {
             let pitch: f32 = -90.;
             quads.push(Quad::new(
                 position,
-                Rotation3::from_euler_angles(0., pitch.to_radians(), 0.),
+                Rotation3::from_euler_angles(0., pitch.to_radians(), 0.), index
+            ))
+        }
+        if self.right_face {
+            let pitch: f32 = 90.;
+            quads.push(Quad::new(
+                position,
+                Rotation3::from_euler_angles(0., pitch.to_radians(), 0.), index
             ))
         }
         if self.top_face {
-            let roll: f32 = 90.;
-            quads.push(Quad::new(
-                position,
-                Rotation3::from_euler_angles(roll.to_radians(), 0., 0.),
-            ))
-        }
-        if self.bottom_face {
             let roll: f32 = -90.;
             quads.push(Quad::new(
                 position,
-                Rotation3::from_euler_angles(roll.to_radians(), 0., 0.),
+                Rotation3::from_euler_angles(roll.to_radians(), 0., 0.),index
+            ))
+        }
+        if self.bottom_face {
+            let roll: f32 = 90.;
+            quads.push(Quad::new(
+                position,
+                Rotation3::from_euler_angles(roll.to_radians(), 0., 0.),index
             ))
         }
         return quads;

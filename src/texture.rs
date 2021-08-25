@@ -7,10 +7,11 @@ use std::path::Path;
 pub struct Texture {
     texture: wgpu::Texture,
     pub view: wgpu::TextureView,
+    pub indexes: Vec<u32>
 }
 
 impl Texture {
-    pub const TEXTURE_ARRAY_SIZE: u32 = 1;
+    pub const TEXTURE_ARRAY_SIZE: u32 = 3;
 
     pub const DEPTH_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Depth32Float;
 
@@ -42,6 +43,7 @@ impl Texture {
         graphics: &Graphics,
         label: Option<&str>,
         image: DynamicImage,
+        indexes: Vec<u32>
     ) -> Result<Texture> {
         let rgba = image.to_rgba8();
         let dimensions = image.dimensions();
@@ -81,22 +83,24 @@ impl Texture {
 
         let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
 
-        Ok(Self { texture, view })
+        Ok(Self { texture, view, indexes })
     }
 
-    fn from_path<P: AsRef<Path>>(graphics: &Graphics, path: P) -> Result<Texture> {
+    fn from_path<P: AsRef<Path>>(graphics: &Graphics, path: P, indexes: Vec<u32>) -> Result<Texture> {
         let buf = path.as_ref().to_path_buf();
         let label = buf.to_str();
         let img = image::open(path).expect("Couldn't find an image from path.");
 
-        Self::from_image(graphics, label, img)
+        Self::from_image(graphics, label, img, indexes)
     }
 
     pub fn load_textures(graphics: &Graphics) -> Result<Vec<Texture>> {
         let path = std::path::Path::new(std::env::current_dir().unwrap().as_os_str()).join("res");
 
         let mut textures = Vec::new();
-        textures.push(Self::from_path(&graphics, path.join("wolf.jpg"))?);
+        textures.push(Self::from_path(&graphics, path.join("grass_side.png"), )?);
+        textures.push(Self::from_path(&graphics, path.join("grass_bottom.png"))?);
+        textures.push(Self::from_path(&graphics, path.join("grass_top.png"))?);
 
         Ok(textures)
     }

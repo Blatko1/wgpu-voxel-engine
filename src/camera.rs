@@ -31,7 +31,7 @@ impl Camera {
             up: Vector3::y(),
             aspect: graphics.sc_desc.width as f32 / graphics.sc_desc.height as f32,
             fov: 60.,
-            near: 0.1,
+            near: 0.01,
             far: 100.0,
             controller,
         }

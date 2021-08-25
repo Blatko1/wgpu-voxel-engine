@@ -2,6 +2,7 @@
 #[derive(Copy, Clone, bytemuck::Pod, bytemuck::Zeroable, Debug)]
 pub struct InstanceRaw {
     pub t_matrix: [[f32; 4]; 4],
+    pub texture_index: u32
 }
 
 impl InstanceRaw {
@@ -29,6 +30,11 @@ impl InstanceRaw {
                     format: wgpu::VertexFormat::Float32x4,
                     offset: std::mem::size_of::<[f32; 12]>() as wgpu::BufferAddress,
                     shader_location: 6,
+                },
+                wgpu::VertexAttribute {
+                    format: wgpu::VertexFormat::Uint32,
+                    offset: std::mem::size_of::<[f32; 16]>() as wgpu::BufferAddress,
+                    shader_location: 7,
                 },
             ],
         }

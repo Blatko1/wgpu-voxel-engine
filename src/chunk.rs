@@ -75,9 +75,9 @@ impl Chunk {
                         front_face,
                     );
                     faces.append(&mut voxels[x + 16 * z + 16 * 16 * y].get_faces([
-                        coord.x + x as i32,
-                        coord.z + z as i32,
-                        coord.y + y as i32,
+                        x as f32,
+                        y as f32,
+                        z as f32,
                     ]));
                 }
             }
@@ -145,8 +145,9 @@ impl ChunkMesh {
 
     fn render<'a>(&'a self, pass: &mut wgpu::RenderPass<'a>, uniform: &'a UniformManager) {
         pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
+        pass.set_vertex_buffer(1, self.instance_buffer.slice(..));
         pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint32);
         pass.set_bind_groups(&uniform);
-        pass.draw_indexed(0..self.indices_len as _, 0, 0..1); //self.instances_len as _
+        pass.draw_indexed(0..self.indices_len as _, 0, 0..self.instances_len as _);
     }
 }
