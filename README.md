@@ -5,7 +5,7 @@ A voxel engine made in Rust with wgpu-rs framework.
 Primary goal of this project is to make *procedural terrain generation* similar to Minecraft's terrain generation.
 
 **TODOs**:
-- Add mipmapping
+>~~- Add mipmapping~~
 - Add debug menu 
 - Add infinite chunk generation
 - Add lightning
