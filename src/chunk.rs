@@ -74,11 +74,10 @@ impl Chunk {
                         back_face,
                         front_face,
                     );
-                    faces.append(&mut voxels[x + 16 * z + 16 * 16 * y].get_faces([
-                        x as f32,
-                        y as f32,
-                        z as f32,
-                    ]));
+                    faces.append(
+                        &mut voxels[x + 16 * z + 16 * 16 * y]
+                            .get_faces([x as f32, y as f32, z as f32]),
+                    );
                 }
             }
         }

@@ -2,7 +2,7 @@
 #[derive(Copy, Clone, bytemuck::Pod, bytemuck::Zeroable, Debug)]
 pub struct InstanceRaw {
     pub t_matrix: [[f32; 4]; 4],
-    pub texture_index: u32
+    pub texture_index: u32,
 }
 
 impl InstanceRaw {

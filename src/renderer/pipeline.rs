@@ -1,8 +1,8 @@
 use super::graphics::Graphics;
+use super::instance::InstanceRaw;
 use super::vertex::Vertex;
 use crate::texture::Texture;
 use crate::uniform::UniformManager;
-use super::instance::InstanceRaw;
 use std::fs;
 use std::path::Path;
 
@@ -90,7 +90,8 @@ impl Pipeline {
             std::path::Path::new(std::env::current_dir().unwrap().as_os_str()).join("src/shaders");
         let bind_group_layouts = uniform.bind_group_layouts();
         let vertex_buffer_layouts = vec![
-            Vertex::init_buffer_layout(), InstanceRaw::init_buffer_layout()
+            Vertex::init_buffer_layout(),
+            InstanceRaw::init_buffer_layout(),
         ];
         Pipeline::new(
             &graphics,

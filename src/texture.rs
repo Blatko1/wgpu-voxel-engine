@@ -96,6 +96,7 @@ impl Texture {
         let path = std::path::Path::new(std::env::current_dir().unwrap().as_os_str()).join("res");
 
         let mut textures = Vec::new();
+        // Grass
         textures.push(Self::from_path(&graphics, path.join("grass_side.png"))?);
         textures.push(Self::from_path(&graphics, path.join("grass_bottom.png"))?);
         textures.push(Self::from_path(&graphics, path.join("grass_top.png"))?);
@@ -115,4 +116,11 @@ impl Texture {
             ..Default::default()
         })
     }
+}
+
+//                                    Front back left right top bottom
+pub static mut TEXTURE_INDEX_LIST: Vec<(u32, u32, u32, u32, u32, u32)> = Vec::new();
+
+pub unsafe fn init_index_list() {
+    TEXTURE_INDEX_LIST.push((0, 0, 0, 0, 2, 1));
 }

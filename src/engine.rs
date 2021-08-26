@@ -16,6 +16,7 @@ impl Engine {
         let camera = Camera::new(&graphics);
         let uniforms = UniformManager::new(&graphics, &camera);
         let renderer = Renderer::new(&graphics, &uniforms);
+        unsafe { crate::texture::init_index_list() };
         let mut world = World::new();
         world.add_quad(&graphics);
         Self {

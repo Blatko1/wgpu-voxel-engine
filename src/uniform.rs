@@ -6,16 +6,22 @@ use wgpu::util::DeviceExt;
 
 pub struct UniformManager {
     global_matrix: GlobalMatrix,
-    texture_array: SampledTextureArray
+    texture_array: SampledTextureArray,
 }
 
 impl UniformManager {
     pub fn new(graphics: &Graphics, camera: &Camera) -> Self {
         let global_matrix = GlobalMatrix::new(&graphics, &camera);
-        let texture_array =
-            SampledTextureArray::new(&graphics, Texture::load_textures(&graphics).unwrap(), Texture::create_sampler(&graphics));
+        let texture_array = SampledTextureArray::new(
+            &graphics,
+            Texture::load_textures(&graphics).unwrap(),
+            Texture::create_sampler(&graphics),
+        );
 
-        Self { global_matrix, texture_array }
+        Self {
+            global_matrix,
+            texture_array,
+        }
     }
 
     pub fn update(&mut self, camera: &Camera, graphics: &Graphics) {
