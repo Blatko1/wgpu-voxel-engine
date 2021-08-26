@@ -40,16 +40,15 @@ impl World {
     pub fn add_chunk(&mut self, coord: Coord3D, graphics: &Graphics) {
         self.chunks
             .insert(coord.to_chunk_coord(), Chunk::new(&graphics, coord));
-        self.chunks.get_mut(&coord.to_chunk_coord()).unwrap().remove_cube(Coord3D::new(0, 0, 0));
+        self.active_chunks.push(coord.to_chunk_coord());
+        self.chunks
+            .get_mut(&coord.to_chunk_coord())
+            .unwrap()
+            .remove_cube(Coord3D::new(0, 0, 0));
+        self.chunks.get_mut(&coord.to_chunk_coord()).unwrap().update(&graphics);
     }
 
     pub fn get_chunk(&self, coord: &Coord3D) -> &Chunk {
         &self.chunks.get(&coord.to_chunk_coord()).unwrap()
-    }
-
-    pub fn add_quad(&mut self, graphics: &Graphics) {
-        let pos = Coord3D::new(0, 0, 0);
-        self.add_chunk(pos, &graphics);
-        self.active_chunks.push(pos.to_chunk_coord());
     }
 }

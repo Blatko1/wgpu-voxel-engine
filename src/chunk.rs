@@ -16,6 +16,7 @@ pub struct Chunk {
     pos: ChunkCoord3D,
     voxels: [Cube; CHUNK_SIZE],
     chunk_mesh: ChunkMesh,
+    faces: Vec<Quad>,
 }
 
 impl Chunk {
@@ -23,13 +24,14 @@ impl Chunk {
         let default = Cube::default();
         let mut voxels: [Cube; CHUNK_SIZE] = [default; CHUNK_SIZE];
 
-        let instances = Chunk::create_quads(&mut voxels, coord);
+        let faces = Chunk::create_quads(&mut voxels, coord);
 
-        let chunk_mesh = ChunkMesh::new(&graphics, quad::VERTICES, quad::INDICES, instances);
+        let chunk_mesh = ChunkMesh::new(&graphics, quad::VERTICES, quad::INDICES, &faces);
         Self {
             pos: coord.to_chunk_coord(),
             voxels,
             chunk_mesh,
+            faces,
         }
     }
 
@@ -85,11 +87,60 @@ impl Chunk {
     }
 
     pub fn get_cube(&self, coord: Coord3D) -> &Cube {
-        self.voxels.get(coord.to_index()).unwrap()
+        self.voxels.get(coord.to_cube_index()).unwrap()
     }
 
     pub fn remove_cube(&mut self, coord: Coord3D) {
-        self.voxels[coord.to_index()].is_active = false;
+        self.voxels[coord.to_cube_index()].is_active = false;
+
+        self.update_nearest_cubes(coord);
+    }
+
+    pub fn update(&mut self, graphics: &Graphics) {
+        self.chunk_mesh.update(&graphics, &self.faces);
+    }
+
+    fn update_nearest_cubes(&mut self, coord: Coord3D) {
+        // Remove faces.
+        if self.voxels[coord.to_cube_index()].front_face == true {
+            self.faces.remove(coord.to_cube_index());
+            println!("front");
+        }
+        if self.voxels[coord.to_cube_index()].back_face == true {
+            self.faces.remove(coord.to_cube_index() + 1);
+            println!("back");
+        }
+        if self.voxels[coord.to_cube_index()].left_face == true {
+            self.faces.remove(coord.to_cube_index() + 2);
+            println!("left");
+        }
+        if self.voxels[coord.to_cube_index()].right_face == true {
+            self.faces.remove(coord.to_cube_index() + 3);
+            println!("right");
+        }
+        if self.voxels[coord.to_cube_index()].top_face == true {
+            self.faces.remove(coord.to_cube_index() + 4);
+            println!("top");
+        }
+        if self.voxels[coord.to_cube_index()].bottom_face == true {
+            self.faces.remove(coord.to_cube_index() + 5);
+            println!("bottom");
+        }
+
+        if coord.x > 0 {
+            if self.voxels[coord.to_cube_index() - 1].is_active == true {
+                self.voxels[coord.to_cube_index() - 1].right_face = true;
+            }
+        }
+        if coord.x < 15 {
+            if self.voxels[coord.to_cube_index() + 1].is_active == true {
+                self.voxels[coord.to_cube_index() + 1].left_face = true;
+            }
+        }
+        if coord.z > 0 {}
+        if coord.z < 15 {}
+        if coord.y > 0 {}
+        if coord.y < 15 {}
     }
 
     pub fn render<'a>(&'a self, pass: &mut wgpu::RenderPass<'a>, uniform: &'a UniformManager) {
@@ -110,7 +161,7 @@ impl ChunkMesh {
         graphics: &Graphics,
         vertices: &[Vertex],
         indices: &[u32],
-        instances: Vec<Quad>,
+        instances: &Vec<Quad>,
     ) -> Self {
         let vertex_buffer = graphics
             .device
@@ -144,6 +195,19 @@ impl ChunkMesh {
             indices_len,
             instances_len,
         }
+    }
+
+    fn update(&mut self, graphics: &Graphics, faces: &Vec<Quad>) {
+        let instance_data = faces.iter().map(Quad::to_raw).collect::<Vec<_>>();
+        self.instance_buffer =
+            graphics
+                .device
+                .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                    label: None,
+                    contents: bytemuck::cast_slice(&instance_data),
+                    usage: wgpu::BufferUsage::VERTEX | wgpu::BufferUsage::COPY_DST,
+                });
+        self.instances_len = faces.len();
     }
 
     fn render<'a>(&'a self, pass: &mut wgpu::RenderPass<'a>, uniform: &'a UniformManager) {

@@ -21,7 +21,8 @@ impl Pipeline {
         depth_format: Option<wgpu::TextureFormat>,
     ) -> Self {
         let vertex_shader = Pipeline::load_shader(&graphics, v_shader, wgpu::ShaderFlags::all());
-        let fragment_shader = Pipeline::load_shader( &graphics, f_shader, wgpu::ShaderFlags::empty());
+        let fragment_shader =
+            Pipeline::load_shader(&graphics, f_shader, wgpu::ShaderFlags::empty());
         let pipeline = graphics
             .device
             .create_render_pipeline(&wgpu::RenderPipelineDescriptor {
@@ -91,7 +92,11 @@ impl Pipeline {
         )
     }
 
-    pub fn load_shader<P: AsRef<Path>>(graphics: &Graphics, path: P, flags: wgpu::ShaderFlags) -> wgpu::ShaderModule {
+    pub fn load_shader<P: AsRef<Path>>(
+        graphics: &Graphics,
+        path: P,
+        flags: wgpu::ShaderFlags,
+    ) -> wgpu::ShaderModule {
         let buf = path.as_ref().to_path_buf();
         let label = buf.to_str().unwrap();
         graphics

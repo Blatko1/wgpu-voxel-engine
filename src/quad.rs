@@ -3,7 +3,7 @@ use crate::renderer::vertex::Vertex;
 use nalgebra::{Rotation3, Translation3};
 
 pub struct Quad {
-    position: Translation3<f32>,
+    pub position: Translation3<f32>,
     rotation: Rotation3<f32>,
     texture_index: u32,
 }
