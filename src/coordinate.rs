@@ -10,7 +10,7 @@ impl Coord3D {
         Self { x, y, z }
     }
 
-    pub fn to_index(&self) -> usize {
+    pub fn to_cube_index(&self) -> usize {
         (self.x + self.z * 16 + self.y * 16 * 16) as usize
     }
 

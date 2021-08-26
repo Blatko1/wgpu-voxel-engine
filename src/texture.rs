@@ -12,7 +12,7 @@ pub struct Texture {
 }
 
 impl Texture {
-    pub const TEXTURE_ARRAY_SIZE: u32 = 12;
+    pub const TEXTURE_ARRAY_SIZE: u32 = 3;
 
     pub const DEPTH_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Depth32Float;
 
@@ -103,30 +103,40 @@ impl Texture {
         let path = std::path::Path::new(std::env::current_dir().unwrap().as_os_str()).join("res");
         let shader_path =
             std::path::Path::new(std::env::current_dir().unwrap().as_os_str()).join("src/shaders");
-        let vert_shader = Pipeline::load_shader(&graphics, shader_path.join("blit.vert.spv"), wgpu::ShaderFlags::all());
-        let frag_shader =
-            Pipeline::load_shader(&graphics, shader_path.join("blit.frag.spv"), wgpu::ShaderFlags::all());
+        let vert_shader = Pipeline::load_shader(
+            &graphics,
+            shader_path.join("blit.vert.spv"),
+            wgpu::ShaderFlags::all(),
+        );
+        let frag_shader = Pipeline::load_shader(
+            &graphics,
+            shader_path.join("blit.frag.spv"),
+            wgpu::ShaderFlags::all(),
+        );
 
-        let mipmap_pipeline = graphics.device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-            label: None,
-            layout: None,
-            vertex: wgpu::VertexState {
-                module: &vert_shader,
-                entry_point: "main",
-                buffers: &[],
-            },
-            primitive: wgpu::PrimitiveState {
-                topology: wgpu::PrimitiveTopology::TriangleList,
-                ..Default::default()
-            },
-            depth_stencil: None,
-            multisample: wgpu::MultisampleState::default(),
-            fragment: Some(wgpu::FragmentState {
-                module: &frag_shader,
-                entry_point: "main",
-                targets: &[wgpu::TextureFormat::Rgba8UnormSrgb.into()],
-            }),
-        });
+        let mipmap_pipeline =
+            graphics
+                .device
+                .create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+                    label: None,
+                    layout: None,
+                    vertex: wgpu::VertexState {
+                        module: &vert_shader,
+                        entry_point: "main",
+                        buffers: &[],
+                    },
+                    primitive: wgpu::PrimitiveState {
+                        topology: wgpu::PrimitiveTopology::TriangleList,
+                        ..Default::default()
+                    },
+                    depth_stencil: None,
+                    multisample: wgpu::MultisampleState::default(),
+                    fragment: Some(wgpu::FragmentState {
+                        module: &frag_shader,
+                        entry_point: "main",
+                        targets: &[wgpu::TextureFormat::Rgba8UnormSrgb.into()],
+                    }),
+                });
 
         let sampler = graphics.device.create_sampler(&wgpu::SamplerDescriptor {
             label: None,
