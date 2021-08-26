@@ -16,36 +16,17 @@ impl Pipeline {
         label: &str,
         v_shader: P,
         f_shader: P,
-        bind_group_layouts: Vec<&wgpu::BindGroupLayout>,
         vertex_layout: Vec<wgpu::VertexBufferLayout>,
+        layout: Option<&wgpu::PipelineLayout>,
         depth_format: Option<wgpu::TextureFormat>,
     ) -> Self {
-        let vertex_shader = graphics
-            .device
-            .create_shader_module(&wgpu::ShaderModuleDescriptor {
-                label: Some(&format!("{} vertex shader", label)),
-                source: wgpu::util::make_spirv(&fs::read(v_shader).unwrap()),
-                flags: wgpu::ShaderFlags::all(),
-            });
-        let fragment_shader = graphics
-            .device
-            .create_shader_module(&wgpu::ShaderModuleDescriptor {
-                label: Some(&format!("{} fragment shader", label)),
-                source: wgpu::util::make_spirv(&fs::read(f_shader).unwrap()),
-                flags: wgpu::ShaderFlags::empty(),
-            });
-        let layout = graphics
-            .device
-            .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-                label: Some(&format!("{} pipeline layout", label)),
-                bind_group_layouts: &bind_group_layouts,
-                push_constant_ranges: &[],
-            });
+        let vertex_shader = Pipeline::load_shader(&graphics, v_shader, wgpu::ShaderFlags::all());
+        let fragment_shader = Pipeline::load_shader( &graphics, f_shader, wgpu::ShaderFlags::empty());
         let pipeline = graphics
             .device
             .create_render_pipeline(&wgpu::RenderPipelineDescriptor {
                 label: Some(&format!("{} render pipeline", label)),
-                layout: Some(&layout),
+                layout,
                 vertex: wgpu::VertexState {
                     module: &vertex_shader,
                     entry_point: "main",
@@ -88,20 +69,38 @@ impl Pipeline {
     pub fn main_pipeline(graphics: &Graphics, uniform: &UniformManager) -> Pipeline {
         let shader_dir =
             std::path::Path::new(std::env::current_dir().unwrap().as_os_str()).join("src/shaders");
-        let bind_group_layouts = uniform.bind_group_layouts();
         let vertex_buffer_layouts = vec![
             Vertex::init_buffer_layout(),
             InstanceRaw::init_buffer_layout(),
         ];
+        let layout = &graphics
+            .device
+            .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+                label: Some("main pipeline layout"),
+                bind_group_layouts: &uniform.bind_group_layouts(),
+                push_constant_ranges: &[],
+            });
         Pipeline::new(
             &graphics,
             "main",
             shader_dir.join("vertex.vert.spv"),
             shader_dir.join("fragment.frag.spv"),
-            bind_group_layouts,
             vertex_buffer_layouts,
+            Some(layout),
             Some(Texture::DEPTH_FORMAT),
         )
+    }
+
+    pub fn load_shader<P: AsRef<Path>>(graphics: &Graphics, path: P, flags: wgpu::ShaderFlags) -> wgpu::ShaderModule {
+        let buf = path.as_ref().to_path_buf();
+        let label = buf.to_str().unwrap();
+        graphics
+            .device
+            .create_shader_module(&wgpu::ShaderModuleDescriptor {
+                label: Some(&format!("{} shader", label)),
+                source: wgpu::util::make_spirv(&fs::read(path).unwrap()),
+                flags,
+            })
     }
 }
 
