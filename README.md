@@ -1,7 +1,17 @@
 # Wgpu Voxel Engine
 
-This is a voxel engine made in Rust with wgpu-rs API.
+A voxel engine made in Rust with wgpu-rs framework.
 
 Primary goal of this project is to make *procedural terrain generation* similar to Minecraft's terrain generation.
 
-This repository was created with a goal to rewrite the old **[wgpu-beginner-project](https://github.com/Blatko1/wgpu-beginner-project)** for a better performance and cleaner code.
+**TODOs**:
+- Add mipmapping
+- Add debug menu 
+- Add infinite chunk generation
+- Add lightning
+- Add frustum culling
+- Divide chunks into bigger regions
+- Add noise terrain generation
+- Add some physics
+
+Old Project: **[wgpu-beginner-project](https://github.com/Blatko1/wgpu-beginner-project)**
