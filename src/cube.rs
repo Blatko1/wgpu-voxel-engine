@@ -1,7 +1,6 @@
 use crate::quad::Quad;
 use crate::texture::TEXTURE_INDEX_LIST;
 use nalgebra::Rotation3;
-use std::collections::HashMap;
 
 #[derive(Copy, Clone)]
 pub struct Cube {

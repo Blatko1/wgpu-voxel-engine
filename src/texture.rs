@@ -150,15 +150,6 @@ impl Texture {
         textures.push(Self::from_path(&graphics, path.join("wolf.jpg"))?);
         textures.push(Self::from_path(&graphics, path.join("grass_bottom.png"))?);
         textures.push(Self::from_path(&graphics, path.join("grass_top.png"))?);
-        textures.push(Self::from_path(&graphics, path.join("wolf.jpg"))?);
-        textures.push(Self::from_path(&graphics, path.join("grass_bottom.png"))?);
-        textures.push(Self::from_path(&graphics, path.join("grass_top.png"))?);
-        textures.push(Self::from_path(&graphics, path.join("wolf.jpg"))?);
-        textures.push(Self::from_path(&graphics, path.join("grass_bottom.png"))?);
-        textures.push(Self::from_path(&graphics, path.join("grass_top.png"))?);
-        textures.push(Self::from_path(&graphics, path.join("wolf.jpg"))?);
-        textures.push(Self::from_path(&graphics, path.join("grass_bottom.png"))?);
-        textures.push(Self::from_path(&graphics, path.join("grass_top.png"))?);
 
         for t in textures.iter() {
             t.generate_mipmaps(&graphics, &mipmap_pipeline, &sampler, &mut encoder);

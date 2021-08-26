@@ -40,6 +40,7 @@ impl World {
     pub fn add_chunk(&mut self, coord: Coord3D, graphics: &Graphics) {
         self.chunks
             .insert(coord.to_chunk_coord(), Chunk::new(&graphics, coord));
+        self.chunks.get_mut(&coord.to_chunk_coord()).unwrap().remove_cube(Coord3D::new(0, 0, 0));
     }
 
     pub fn get_chunk(&self, coord: &Coord3D) -> &Chunk {

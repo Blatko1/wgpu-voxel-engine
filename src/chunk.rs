@@ -88,6 +88,10 @@ impl Chunk {
         self.voxels.get(coord.to_index()).unwrap()
     }
 
+    pub fn remove_cube(&mut self, coord: Coord3D) {
+        self.voxels[coord.to_index()].is_active = false;
+    }
+
     pub fn render<'a>(&'a self, pass: &mut wgpu::RenderPass<'a>, uniform: &'a UniformManager) {
         self.chunk_mesh.render(pass, &uniform);
     }
