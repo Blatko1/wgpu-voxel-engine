@@ -1,104 +1,13 @@
-use crate::quad::Quad;
-use crate::texture::TEXTURE_INDEX_LIST;
-use nalgebra::Rotation3;
+use crate::coordinate::Coord3D;
 
-#[derive(Copy, Clone)]
 pub struct Cube {
-    pub top_face: bool,
-    pub bottom_face: bool,
-    pub left_face: bool,
-    pub right_face: bool,
-    pub back_face: bool,
-    pub front_face: bool,
-    pub is_active: bool,
-    texture: CubeType,
+    pub position: Coord3D,
+    pub is_air: bool,
 }
 
 impl Cube {
-    pub fn default() -> Self {
-        Self {
-            top_face: true,
-            bottom_face: true,
-            left_face: true,
-            right_face: true,
-            back_face: true,
-            front_face: true,
-            is_active: true,
-            texture: CubeType::GRASS,
-        }
-    }
-
-    pub fn new(
-        top_face: bool,
-        bottom_face: bool,
-        left_face: bool,
-        right_face: bool,
-        back_face: bool,
-        front_face: bool,
-    ) -> Self {
-        Self {
-            top_face,
-            bottom_face,
-            left_face,
-            right_face,
-            back_face,
-            front_face,
-            is_active: true,
-            texture: CubeType::GRASS,
-        }
-    }
-    // roll = x, yaw = z, pitch = y  IDK WHY!
-    pub fn get_faces(&self, position: [f32; 3]) -> Vec<Quad> {
-        let mut quads = Vec::new();
-        let index = unsafe { TEXTURE_INDEX_LIST.get(self.texture as usize).unwrap() };
-        if self.front_face {
-            quads.push(Quad::new(
-                position,
-                Rotation3::new([0., 0., 0.].into()),
-                index.0,
-            ));
-        }
-        if self.back_face {
-            let pitch: f32 = 180.;
-            quads.push(Quad::new(
-                position,
-                Rotation3::from_euler_angles(0., pitch.to_radians(), 0.),
-                index.1,
-            ))
-        }
-        if self.left_face {
-            let pitch: f32 = -90.;
-            quads.push(Quad::new(
-                position,
-                Rotation3::from_euler_angles(0., pitch.to_radians(), 0.),
-                index.2,
-            ))
-        }
-        if self.right_face {
-            let pitch: f32 = 90.;
-            quads.push(Quad::new(
-                position,
-                Rotation3::from_euler_angles(0., pitch.to_radians(), 0.),
-                index.3,
-            ))
-        }
-        if self.top_face {
-            let roll: f32 = -90.;
-            quads.push(Quad::new(
-                position,
-                Rotation3::from_euler_angles(roll.to_radians(), 0., 0.),
-                index.4,
-            ))
-        }
-        if self.bottom_face {
-            let roll: f32 = 90.;
-            quads.push(Quad::new(
-                position,
-                Rotation3::from_euler_angles(roll.to_radians(), 0., 0.),
-                index.5,
-            ))
-        }
-        return quads;
+    pub fn new(position: Coord3D, is_air: bool) -> Self {
+        Self { position, is_air }
     }
 }
 
@@ -106,6 +15,4 @@ impl Cube {
 pub enum CubeType {
     GRASS = 0,
     DIRT = 1,
-    STONE = 2,
-    WOOD = 3,
 }

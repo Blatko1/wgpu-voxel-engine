@@ -17,9 +17,8 @@ impl Engine {
         let camera = Camera::new(&graphics);
         let uniforms = UniformManager::new(&graphics, &camera);
         let renderer = Renderer::new(&graphics, &uniforms);
+        let mut world = World::new(&graphics);
         unsafe { crate::texture::init_index_list() };
-        let mut world = World::new();
-        world.add_chunk(Coord3D::new(0, 0, 0), &graphics);
         Self {
             renderer,
             world,
@@ -47,5 +46,9 @@ impl Engine {
 
     pub fn input(&mut self, event: &winit::event::DeviceEvent) {
         self.camera.input(event);
+    }
+
+    pub fn new_perlin(&mut self, graphics: &Graphics) {
+        self.world = World::new(&graphics)
     }
 }

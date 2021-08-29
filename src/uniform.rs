@@ -116,10 +116,6 @@ impl GlobalMatrix {
             bytemuck::cast_slice(&[self.data]),
         );
     }
-
-    fn get_layout(&self) -> &wgpu::BindGroupLayout {
-        &self.bind_group_layout
-    }
 }
 
 #[derive(Hash, Eq, PartialEq)]

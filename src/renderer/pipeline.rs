@@ -112,5 +112,4 @@ impl Pipeline {
 #[derive(Eq, PartialEq, Hash)]
 pub enum Type {
     Main,
-    Light,
 }
