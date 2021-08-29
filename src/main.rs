@@ -14,6 +14,7 @@ mod renderer;
 mod texture;
 mod uniform;
 mod world;
+mod terrain_generator;
 
 use crate::renderer::graphics::Graphics;
 use engine::Engine;
@@ -86,6 +87,9 @@ fn main() {
                         focus = false;
                         window.set_cursor_visible(true);
                         window.set_cursor_grab(false).unwrap();
+                    },
+                    MouseButton::Middle => {
+                        client.engine.new_perlin(&client.graphics);
                     }
                     _ => (),
                 },

@@ -14,12 +14,12 @@ impl Coord3D {
         (self.x + self.z * 16 + self.y * 16 * 16) as usize
     }
 
-    pub fn to_region_coord(&self) -> RegionCoord3D {
+    /*pub fn to_region_coord(&self) -> RegionCoord3D {
         let x = self.x / 256;
         let y = self.y / 256;
         let z = self.z / 256;
         Coord3D { x, y, z }
-    }
+    }*/
 
     pub fn to_chunk_coord(&self) -> ChunkCoord3D {
         let x = self.x / 16;
@@ -29,22 +29,4 @@ impl Coord3D {
     }
 }
 
-pub type RegionCoord3D = Coord3D;
 pub type ChunkCoord3D = Coord3D;
-
-#[derive(Eq, PartialEq, Hash, Copy, Clone)]
-pub struct UCoord3D {
-    pub x: u32,
-    pub y: u32,
-    pub z: u32,
-}
-
-impl UCoord3D {
-    pub fn new(x: u32, y: u32, z: u32) -> Self {
-        Self { x, y, z }
-    }
-
-    pub fn to_chunk_index(&self) -> usize {
-        (self.x + self.z * 16 + self.y * 16 * 16) as usize
-    }
-}

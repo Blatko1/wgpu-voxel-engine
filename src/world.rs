@@ -9,7 +9,6 @@ use wgpu::RenderPass;
 
 pub struct World {
     chunks: HashMap<ChunkCoord3D, Chunk>,
-    active_chunks: Vec<ChunkCoord3D>,
 }
 
 impl Renderable for World {
@@ -21,34 +20,17 @@ impl Renderable for World {
     ) {
         pass.set_pipeline(&renderer.pipelines.get(&Type::Main).unwrap().pipeline);
 
-        for p in &self.active_chunks {
-            self.chunks.get(p).unwrap().render(pass, &uniform);
+        for (_, c) in &self.chunks {
+            c.render(pass, &uniform);
         }
     }
 }
 
 impl World {
-    pub fn new() -> Self {
-        let chunks = HashMap::new();
-        let active_chunks = Vec::new();
-        Self {
-            chunks,
-            active_chunks,
-        }
-    }
-
-    pub fn add_chunk(&mut self, coord: Coord3D, graphics: &Graphics) {
-        self.chunks
-            .insert(coord.to_chunk_coord(), Chunk::new(&graphics, coord));
-        self.active_chunks.push(coord.to_chunk_coord());
-        self.chunks
-            .get_mut(&coord.to_chunk_coord())
-            .unwrap()
-            .remove_cube(Coord3D::new(0, 0, 0));
-        self.chunks.get_mut(&coord.to_chunk_coord()).unwrap().update(&graphics);
-    }
-
-    pub fn get_chunk(&self, coord: &Coord3D) -> &Chunk {
-        &self.chunks.get(&coord.to_chunk_coord()).unwrap()
+    pub fn new(graphics: &Graphics) -> Self {
+        let mut chunks = HashMap::new();
+        chunks.insert(Coord3D::new(0, 0, 0), Chunk::new(&graphics, Coord3D::new(0, 0, 0)));
+        //chunks.insert(Coord3D::new(1, 0, 0), Chunk::new(&graphics, Coord3D::new(1, 0, 0)));
+        Self { chunks }
     }
 }
