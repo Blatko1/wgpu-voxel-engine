@@ -17,7 +17,7 @@ impl Engine {
         let camera = Camera::new(&graphics);
         let uniforms = UniformManager::new(&graphics, &camera);
         let renderer = Renderer::new(&graphics, &uniforms);
-        let mut world = World::new(&graphics);
+        let mut world = World::new(&graphics, &camera);
         unsafe { crate::texture::init_index_list() };
         Self {
             renderer,
@@ -48,7 +48,7 @@ impl Engine {
         self.camera.input(event);
     }
 
-    pub fn new_perlin(&mut self, graphics: &Graphics) {
-        self.world = World::new(&graphics)
+    pub fn new_perlin(&mut self) {
+        self.world.update(&self.camera);
     }
 }

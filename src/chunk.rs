@@ -1,12 +1,12 @@
 use crate::coordinate::{ChunkCoord3D, Coord3D};
 use crate::cube::Cube;
-use crate::quad;
-use crate::quad::{Quad, Rotation};
+use crate::quad::{self, Quad, Rotation};
 use crate::renderer::graphics::Graphics;
+use crate::terrain_generator::TerrainGenerator;
 use crate::uniform::{SetUniforms, UniformManager};
-use simdnoise::*;
+use rayon::prelude::*;
 use wgpu::util::DeviceExt;
-use rand::prelude::*;
+use std::sync::mpsc::channel;
 
 const CHUNK_LENGTH: usize = 16;
 const CHUNK_WIDTH: usize = 16;
@@ -24,9 +24,9 @@ pub struct Chunk {
 impl Chunk {
     pub fn new(graphics: &Graphics, position: ChunkCoord3D) -> Self {
         let mut cubes = Vec::new();
-
-        Chunk::build(&mut cubes, position);
-        let faces = Chunk::generate_faces(&mut cubes);
+        Chunk::empty_chunk(&mut cubes, position);
+        Chunk::generate_terrain(&mut cubes, position);
+        let faces = Chunk::generate_faces(&mut cubes, position);
 
         let mesh = ChunkMesh::new(&graphics, &faces);
         Self {
@@ -37,24 +37,29 @@ impl Chunk {
         }
     }
 
-    fn build(cubes: &mut Vec<Cube>, pos: ChunkCoord3D) {
-        let mut rng = rand::thread_rng();
-        let seed = rng.gen_range(0..10000);
-        let perlin = underground_perlin_3d(seed);
-        for y in 0..CHUNK_HEIGHT {
-            for z in 0..CHUNK_WIDTH {
-                for x in 0..CHUNK_LENGTH {
-                    if perlin[x + 16 * z + 16 * 16 * y] > 0.5 {
-                        cubes.insert((x + 16 * z + 16 * 16 * y),Cube::new(Coord3D::new(x as i32 + pos.x * 16, y as i32 + pos.y * 16, z as i32 + pos.z * 16), false));
-                    } else {
-                        cubes.insert((x + 16 * z + 16 * 16 * y),Cube::new(Coord3D::new(x as i32 + pos.x * 16, y as i32 + pos.y * 16, z as i32 + pos.z * 16), true));
-                    }
-                }
+    fn generate_terrain(cubes: &mut Vec<Cube>, pos: ChunkCoord3D) {
+        let noise = TerrainGenerator::new(1);
+        cubes.into_par_iter().enumerate().for_each(|(i, cube)| {
+            let x: i32 = cube.position.x;
+            let y: i32 = cube.position.y;
+            let z: i32 = cube.position.z;
+            let perlin = noise.perlin_3d(x, y, z);
+            if perlin > 0. {
+                cube.set_air(false);
+            } else {
+                cube.set_air(true);
             }
-        }
+        });
     }
 
-    fn generate_faces(cubes: &Vec<Cube>) -> Vec<Quad> {
+    fn local_coords(index: usize) -> (i32, i32, i32) {
+        let y = index / 256;
+        let z = (index % 256) / 16;
+        let x = (index % 256) % 16;
+        (x as i32, z as i32, y as i32)
+    }
+
+    fn generate_faces(cubes: &Vec<Cube>, pos: ChunkCoord3D) -> Vec<Quad> {
         let mut quads = Vec::new();
         for y in 0..CHUNK_HEIGHT {
             for z in 0..CHUNK_WIDTH {
@@ -113,17 +118,22 @@ impl Chunk {
         quads
     }
 
+    fn empty_chunk(cubes: &mut Vec<Cube>, pos: ChunkCoord3D) {
+        for y in 0..16 {
+            for z in 0..16 {
+                for x in 0..16 {
+                    cubes.push(Cube::new(
+                        Coord3D::new(x + pos.x * 16, y + pos.y * 16, z + pos.z * 16),
+                        true,
+                    ));
+                }
+            }
+        }
+    }
+
     pub fn render<'a>(&'a self, pass: &mut wgpu::RenderPass<'a>, uniform: &'a UniformManager) {
         self.mesh.render(pass, uniform);
     }
-}
-
-fn underground_perlin_3d(seed: i32) -> Vec<f32> {
-    /*NoiseBuilder::fbm_3d(CHUNK_WIDTH, CHUNK_HEIGHT, CHUNK_LENGTH)
-        .with_seed(seed).with_freq(0.1)
-        .generate_scaled(0., 1.)*/
-    //NoiseBuilder::gradient_3d(CHUNK_WIDTH, CHUNK_HEIGHT, CHUNK_LENGTH).with_seed(seed).generate_scaled(0., 1.)
-    NoiseBuilder::gradient_3d(CHUNK_WIDTH, CHUNK_HEIGHT, CHUNK_LENGTH).with_seed(seed).generate_scaled(0., 1.)
 }
 
 pub struct ChunkMesh {
