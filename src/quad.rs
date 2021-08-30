@@ -12,31 +12,31 @@ pub struct Quad {
 
 impl Quad {
     pub fn new(pos: Coord3D, facing: Rotation, texture_index: u32) -> Self {
-        let mut rotation: Rotation3<f32> = Rotation3::from_euler_angles(0., 0., 0., );
+        let mut rotation: Rotation3<f32> = Rotation3::from_euler_angles(0., 0., 0.);
         match facing {
             Rotation::UP => {
                 let rot: f32 = -90.;
                 rotation = Rotation3::from_euler_angles(rot.to_radians(), 0., 0.);
-            },
+            }
             Rotation::DOWN => {
                 let rot: f32 = 90.;
                 rotation = Rotation3::from_euler_angles(rot.to_radians(), 0., 0.);
-            },
+            }
             Rotation::LEFT => {
                 let rot: f32 = -90.;
                 rotation = Rotation3::from_euler_angles(0., rot.to_radians(), 0.);
-            },
+            }
             Rotation::RIGHT => {
                 let rot: f32 = 90.;
                 rotation = Rotation3::from_euler_angles(0., rot.to_radians(), 0.);
-            },
+            }
             Rotation::FRONT => {
-                rotation = Rotation3::from_euler_angles(0., 0., 0., );
-            },
+                rotation = Rotation3::from_euler_angles(0., 0., 0.);
+            }
             Rotation::BACK => {
                 let rot: f32 = 180.;
                 rotation = Rotation3::from_euler_angles(0., rot.to_radians(), 0.);
-            },
+            }
         }
         Quad {
             position: Translation3::from([pos.x as f32, pos.y as f32, pos.z as f32]),
@@ -61,7 +61,7 @@ pub enum Rotation {
     LEFT,
     RIGHT,
     FRONT,
-    BACK
+    BACK,
 }
 
 pub const VERTICES: &[Vertex] = &[

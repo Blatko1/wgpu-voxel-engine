@@ -4,7 +4,7 @@ use nalgebra::{Matrix4, Point3, Vector3};
 use winit::event::{DeviceEvent, KeyboardInput, MouseScrollDelta, VirtualKeyCode};
 
 pub struct Camera {
-    eye: Point3<f32>,
+    pub eye: Point3<f32>,
     target: Point3<f32>,
     up: Vector3<f32>,
     aspect: f32,

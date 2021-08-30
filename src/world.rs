@@ -1,15 +1,20 @@
+use crate::camera::Camera;
 use crate::chunk::Chunk;
 use crate::coordinate::{ChunkCoord3D, Coord3D};
 use crate::renderer::graphics::Graphics;
 use crate::renderer::pipeline::Type;
 use crate::renderer::renderer::{Renderable, Renderer};
 use crate::uniform::UniformManager;
+use rayon::prelude::*;
 use std::collections::HashMap;
 use wgpu::RenderPass;
+use crate::player::Player;
 
 pub struct World {
     chunks: HashMap<ChunkCoord3D, Chunk>,
 }
+
+const RENDER_DISTANCE: i32 = 5;
 
 impl Renderable for World {
     fn render<'a>(
@@ -27,10 +32,18 @@ impl Renderable for World {
 }
 
 impl World {
-    pub fn new(graphics: &Graphics) -> Self {
+    pub fn new(graphics: &Graphics, camera: &Camera) -> Self {
         let mut chunks = HashMap::new();
-        chunks.insert(Coord3D::new(0, 0, 0), Chunk::new(&graphics, Coord3D::new(0, 0, 0)));
-        //chunks.insert(Coord3D::new(1, 0, 0), Chunk::new(&graphics, Coord3D::new(1, 0, 0)));
         Self { chunks }
+    }
+
+    pub fn update(&self, camera: &Camera) {
+        for x in 0..RENDER_DISTANCE {
+            for z in 0..RENDER_DISTANCE {
+                if !self.chunks.contains_key(&ChunkCoord3D::new(x, 0, z)) {
+
+                }
+            }
+        }
     }
 }

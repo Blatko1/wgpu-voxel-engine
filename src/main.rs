@@ -8,13 +8,14 @@ mod chunk;
 mod coordinate;
 mod cube;
 mod engine;
+mod player;
 mod quad;
 mod region;
 mod renderer;
+mod terrain_generator;
 mod texture;
 mod uniform;
 mod world;
-mod terrain_generator;
 
 use crate::renderer::graphics::Graphics;
 use engine::Engine;
@@ -82,14 +83,12 @@ fn main() {
                         focus = true;
                         window.set_cursor_visible(false);
                         window.set_cursor_grab(true).unwrap();
+                        client.engine.new_perlin();
                     }
                     MouseButton::Right => {
                         focus = false;
                         window.set_cursor_visible(true);
                         window.set_cursor_grab(false).unwrap();
-                    },
-                    MouseButton::Middle => {
-                        client.engine.new_perlin(&client.graphics);
                     }
                     _ => (),
                 },

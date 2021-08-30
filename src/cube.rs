@@ -9,6 +9,10 @@ impl Cube {
     pub fn new(position: Coord3D, is_air: bool) -> Self {
         Self { position, is_air }
     }
+
+    pub fn set_air(&mut self, air: bool) {
+        self.is_air = air;
+    }
 }
 
 #[derive(Copy, Clone)]
