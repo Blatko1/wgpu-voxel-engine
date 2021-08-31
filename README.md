@@ -1,6 +1,6 @@
 # Wgpu Voxel Engine
 
-A voxel engine made in Rust with wgpu-rs framework.
+A voxel engine made in Rust with [wgpu-rs](https://github.com/gfx-rs/wgpu) framework.
 
 Primary goal of this project is to make *procedural terrain generation* similar to Minecraft's terrain generation.
 
