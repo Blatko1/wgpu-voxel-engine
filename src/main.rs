@@ -83,7 +83,6 @@ fn main() {
                         focus = true;
                         window.set_cursor_visible(false);
                         window.set_cursor_grab(true).unwrap();
-                        client.engine.new_perlin();
                     }
                     MouseButton::Right => {
                         focus = false;

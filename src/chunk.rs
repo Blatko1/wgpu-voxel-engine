@@ -5,8 +5,8 @@ use crate::renderer::graphics::Graphics;
 use crate::terrain_generator::TerrainGenerator;
 use crate::uniform::{SetUniforms, UniformManager};
 use rayon::prelude::*;
-use wgpu::util::DeviceExt;
 use std::sync::mpsc::channel;
+use wgpu::util::DeviceExt;
 
 const CHUNK_LENGTH: usize = 16;
 const CHUNK_WIDTH: usize = 16;
@@ -72,45 +72,93 @@ impl Chunk {
                     let pos_z = cubes[x + 16 * z + 16 * 16 * y].position.z;
                     if x > 0 {
                         if cubes[(x - 1) + 16 * z + 16 * 16 * y].is_air == true {
-                            quads.push(Quad::new(Coord3D::new(pos_x, pos_y, pos_z), Rotation::LEFT, 2));
+                            quads.push(Quad::new(
+                                Coord3D::new(pos_x, pos_y, pos_z),
+                                Rotation::LEFT,
+                                2,
+                            ));
                         }
                     } else {
-                        quads.push(Quad::new(Coord3D::new(pos_x, pos_y, pos_z), Rotation::LEFT, 2));
+                        quads.push(Quad::new(
+                            Coord3D::new(pos_x, pos_y, pos_z),
+                            Rotation::LEFT,
+                            2,
+                        ));
                     }
                     if x < 16 - 1 {
                         if cubes[(x + 1) + 16 * z + 16 * 16 * y].is_air == true {
-                            quads.push(Quad::new(Coord3D::new(pos_x, pos_y, pos_z), Rotation::RIGHT, 2));
+                            quads.push(Quad::new(
+                                Coord3D::new(pos_x, pos_y, pos_z),
+                                Rotation::RIGHT,
+                                2,
+                            ));
                         }
                     } else {
-                        quads.push(Quad::new(Coord3D::new(pos_x, pos_y, pos_z), Rotation::RIGHT, 2));
+                        quads.push(Quad::new(
+                            Coord3D::new(pos_x, pos_y, pos_z),
+                            Rotation::RIGHT,
+                            2,
+                        ));
                     }
                     if z > 0 {
                         if cubes[x + 16 * (z - 1) + 16 * 16 * y].is_air == true {
-                            quads.push(Quad::new(Coord3D::new(pos_x, pos_y, pos_z), Rotation::BACK, 2));
+                            quads.push(Quad::new(
+                                Coord3D::new(pos_x, pos_y, pos_z),
+                                Rotation::BACK,
+                                2,
+                            ));
                         }
                     } else {
-                        quads.push(Quad::new(Coord3D::new(pos_x, pos_y, pos_z), Rotation::BACK, 2));
+                        quads.push(Quad::new(
+                            Coord3D::new(pos_x, pos_y, pos_z),
+                            Rotation::BACK,
+                            2,
+                        ));
                     }
                     if z < 16 - 1 {
                         if cubes[x + 16 * (z + 1) + 16 * 16 * y].is_air == true {
-                            quads.push(Quad::new(Coord3D::new(pos_x, pos_y, pos_z), Rotation::FRONT, 2));
+                            quads.push(Quad::new(
+                                Coord3D::new(pos_x, pos_y, pos_z),
+                                Rotation::FRONT,
+                                2,
+                            ));
                         }
                     } else {
-                        quads.push(Quad::new(Coord3D::new(pos_x, pos_y, pos_z), Rotation::FRONT, 2));
+                        quads.push(Quad::new(
+                            Coord3D::new(pos_x, pos_y, pos_z),
+                            Rotation::FRONT,
+                            2,
+                        ));
                     }
                     if y > 0 {
                         if cubes[x + 16 * z + 16 * 16 * (y - 1)].is_air == true {
-                            quads.push(Quad::new(Coord3D::new(pos_x, pos_y, pos_z), Rotation::DOWN, 2));
+                            quads.push(Quad::new(
+                                Coord3D::new(pos_x, pos_y, pos_z),
+                                Rotation::DOWN,
+                                2,
+                            ));
                         }
                     } else {
-                        quads.push(Quad::new(Coord3D::new(pos_x, pos_y, pos_z), Rotation::DOWN, 2));
+                        quads.push(Quad::new(
+                            Coord3D::new(pos_x, pos_y, pos_z),
+                            Rotation::DOWN,
+                            2,
+                        ));
                     }
                     if y < 16 - 1 {
                         if cubes[x + 16 * z + 16 * 16 * (y + 1)].is_air == true {
-                            quads.push(Quad::new(Coord3D::new(pos_x, pos_y, pos_z), Rotation::UP, 2));
+                            quads.push(Quad::new(
+                                Coord3D::new(pos_x, pos_y, pos_z),
+                                Rotation::UP,
+                                2,
+                            ));
                         }
                     } else {
-                        quads.push(Quad::new(Coord3D::new(pos_x, pos_y, pos_z), Rotation::UP, 2));
+                        quads.push(Quad::new(
+                            Coord3D::new(pos_x, pos_y, pos_z),
+                            Rotation::UP,
+                            2,
+                        ));
                     }
                 }
             }
