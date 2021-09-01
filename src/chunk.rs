@@ -6,11 +6,12 @@ use crate::terrain_generator::TerrainGenerator;
 use crate::uniform::{SetUniforms, UniformManager};
 use rayon::prelude::*;
 use std::sync::mpsc::channel;
+use std::time::{SystemTime, UNIX_EPOCH};
 use wgpu::util::DeviceExt;
 
-const CHUNK_LENGTH: usize = 16;
-const CHUNK_WIDTH: usize = 16;
-const CHUNK_HEIGHT: usize = 16;
+const CHUNK_LENGTH: usize = 32;
+const CHUNK_WIDTH: usize = 32;
+const CHUNK_HEIGHT: usize = 32;
 
 const CHUNK_SIZE: usize = CHUNK_WIDTH * CHUNK_LENGTH * CHUNK_HEIGHT;
 
@@ -18,22 +19,18 @@ pub struct Chunk {
     position: ChunkCoord3D,
     cubes: Vec<Cube>,
     faces: Vec<Quad>,
-    mesh: ChunkMesh,
 }
 
 impl Chunk {
-    pub fn new(graphics: &Graphics, position: ChunkCoord3D) -> Self {
+    pub fn new(position: ChunkCoord3D) -> Self {
         let mut cubes = Vec::new();
         Chunk::empty_chunk(&mut cubes, position);
         Chunk::generate_terrain(&mut cubes, position);
         let faces = Chunk::generate_faces(&mut cubes, position);
-
-        let mesh = ChunkMesh::new(&graphics, &faces);
         Self {
             position,
             cubes,
             faces,
-            mesh,
         }
     }
 
@@ -53,9 +50,9 @@ impl Chunk {
     }
 
     fn local_coords(index: usize) -> (i32, i32, i32) {
-        let y = index / 256;
-        let z = (index % 256) / 16;
-        let x = (index % 256) % 16;
+        let y = index / 1024;
+        let z = (index % 1024) / 32;
+        let x = (index % 1024) % 32;
         (x as i32, z as i32, y as i32)
     }
 
@@ -64,14 +61,14 @@ impl Chunk {
         for y in 0..CHUNK_HEIGHT {
             for z in 0..CHUNK_WIDTH {
                 for x in 0..CHUNK_LENGTH {
-                    if cubes[x + 16 * z + 16 * 16 * y].is_air == true {
+                    if cubes[x + 32 * z + 32 * 32 * y].is_air == true {
                         continue;
                     }
-                    let pos_x = cubes[x + 16 * z + 16 * 16 * y].position.x;
-                    let pos_y = cubes[x + 16 * z + 16 * 16 * y].position.y;
-                    let pos_z = cubes[x + 16 * z + 16 * 16 * y].position.z;
+                    let pos_x = cubes[x + 32 * z + 32 * 32 * y].position.x;
+                    let pos_y = cubes[x + 32 * z + 32 * 32 * y].position.y;
+                    let pos_z = cubes[x + 32 * z + 32 * 32 * y].position.z;
                     if x > 0 {
-                        if cubes[(x - 1) + 16 * z + 16 * 16 * y].is_air == true {
+                        if cubes[(x - 1) + 32 * z + 32 * 32 * y].is_air == true {
                             quads.push(Quad::new(
                                 Coord3D::new(pos_x, pos_y, pos_z),
                                 Rotation::LEFT,
@@ -85,8 +82,8 @@ impl Chunk {
                             2,
                         ));
                     }
-                    if x < 16 - 1 {
-                        if cubes[(x + 1) + 16 * z + 16 * 16 * y].is_air == true {
+                    if x < 32 - 1 {
+                        if cubes[(x + 1) + 32 * z + 32 * 32 * y].is_air == true {
                             quads.push(Quad::new(
                                 Coord3D::new(pos_x, pos_y, pos_z),
                                 Rotation::RIGHT,
@@ -101,7 +98,7 @@ impl Chunk {
                         ));
                     }
                     if z > 0 {
-                        if cubes[x + 16 * (z - 1) + 16 * 16 * y].is_air == true {
+                        if cubes[x + 32 * (z - 1) + 32 * 32 * y].is_air == true {
                             quads.push(Quad::new(
                                 Coord3D::new(pos_x, pos_y, pos_z),
                                 Rotation::BACK,
@@ -115,8 +112,8 @@ impl Chunk {
                             2,
                         ));
                     }
-                    if z < 16 - 1 {
-                        if cubes[x + 16 * (z + 1) + 16 * 16 * y].is_air == true {
+                    if z < 32 - 1 {
+                        if cubes[x + 32 * (z + 1) + 32 * 32 * y].is_air == true {
                             quads.push(Quad::new(
                                 Coord3D::new(pos_x, pos_y, pos_z),
                                 Rotation::FRONT,
@@ -131,7 +128,7 @@ impl Chunk {
                         ));
                     }
                     if y > 0 {
-                        if cubes[x + 16 * z + 16 * 16 * (y - 1)].is_air == true {
+                        if cubes[x + 32 * z + 32 * 32 * (y - 1)].is_air == true {
                             quads.push(Quad::new(
                                 Coord3D::new(pos_x, pos_y, pos_z),
                                 Rotation::DOWN,
@@ -145,8 +142,8 @@ impl Chunk {
                             2,
                         ));
                     }
-                    if y < 16 - 1 {
-                        if cubes[x + 16 * z + 16 * 16 * (y + 1)].is_air == true {
+                    if y < 32 - 1 {
+                        if cubes[x + 32 * z + 32 * 32 * (y + 1)].is_air == true {
                             quads.push(Quad::new(
                                 Coord3D::new(pos_x, pos_y, pos_z),
                                 Rotation::UP,
@@ -167,11 +164,11 @@ impl Chunk {
     }
 
     fn empty_chunk(cubes: &mut Vec<Cube>, pos: ChunkCoord3D) {
-        for y in 0..16 {
-            for z in 0..16 {
-                for x in 0..16 {
+        for y in 0..32 {
+            for z in 0..32 {
+                for x in 0..32 {
                     cubes.push(Cube::new(
-                        Coord3D::new(x + pos.x * 16, y + pos.y * 16, z + pos.z * 16),
+                        Coord3D::new(x + pos.x * 32, y + pos.y * 32, z + pos.z * 32),
                         true,
                     ));
                 }
@@ -179,9 +176,26 @@ impl Chunk {
         }
     }
 
-    pub fn render<'a>(&'a self, pass: &mut wgpu::RenderPass<'a>, uniform: &'a UniformManager) {
-        self.mesh.render(pass, uniform);
+    pub fn generate_data(&self) -> ChunkMeshData {
+        let vertex_data = bytemuck::cast_slice(quad::VERTICES).to_vec();
+        let index_data = bytemuck::cast_slice(quad::INDICES).to_vec();
+        let instance_raw = self.faces.iter().map(Quad::to_raw).collect::<Vec<_>>();
+        let instance_data = bytemuck::cast_slice(&instance_raw).to_vec();
+        let instance_len = self.faces.len();
+        ChunkMeshData {
+            vertex_data,
+            index_data,
+            instance_data,
+            instance_len
+        }
     }
+}
+
+pub struct ChunkMeshData {
+    vertex_data: Vec<u8>,
+    index_data: Vec<u8>,
+    instance_data: Vec<u8>,
+    instance_len: usize
 }
 
 pub struct ChunkMesh {
@@ -193,32 +207,41 @@ pub struct ChunkMesh {
 }
 
 impl ChunkMesh {
-    fn new(graphics: &Graphics, instances: &Vec<Quad>) -> Self {
+    pub fn new(graphics: &Graphics, data: ChunkMeshData) -> Self {
+        /*let now = SystemTime::now();
+        let time_then = now
+            .duration_since(UNIX_EPOCH)
+            .expect("Time went backwards!");*/
         let vertex_buffer = graphics
             .device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: None,
-                contents: bytemuck::cast_slice(quad::VERTICES),
+                contents: data.vertex_data.as_slice(),
                 usage: wgpu::BufferUsage::VERTEX,
             });
         let index_buffer = graphics
             .device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: None,
-                contents: bytemuck::cast_slice(quad::INDICES),
+                contents: data.index_data.as_slice(),
                 usage: wgpu::BufferUsage::INDEX,
             });
-        let instance_data = instances.iter().map(Quad::to_raw).collect::<Vec<_>>();
         let instance_buffer =
             graphics
                 .device
                 .create_buffer_init(&wgpu::util::BufferInitDescriptor {
                     label: None,
-                    contents: bytemuck::cast_slice(&instance_data),
+                    contents: data.instance_data.as_slice(),
                     usage: wgpu::BufferUsage::VERTEX | wgpu::BufferUsage::COPY_DST,
                 });
         let indices_len = quad::INDICES.len();
-        let instances_len = instances.len();
+        let instances_len = data.instance_len;
+        /*let now = SystemTime::now();
+        let time_now = now
+            .duration_since(UNIX_EPOCH)
+            .expect("Time went backwards!");
+        let delta = time_now - time_then;
+        println!("Delta: {}", delta.as_millis());*/
         Self {
             vertex_buffer,
             index_buffer,
@@ -228,20 +251,7 @@ impl ChunkMesh {
         }
     }
 
-    fn update(&mut self, graphics: &Graphics, faces: &Vec<Quad>) {
-        let instance_data = faces.iter().map(Quad::to_raw).collect::<Vec<_>>();
-        self.instance_buffer =
-            graphics
-                .device
-                .create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                    label: None,
-                    contents: bytemuck::cast_slice(&instance_data),
-                    usage: wgpu::BufferUsage::VERTEX | wgpu::BufferUsage::COPY_DST,
-                });
-        self.instances_len = faces.len();
-    }
-
-    fn render<'a>(&'a self, pass: &mut wgpu::RenderPass<'a>, uniform: &'a UniformManager) {
+    pub fn render<'a>(&'a self, pass: &mut wgpu::RenderPass<'a>, uniform: &'a UniformManager) {
         pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
         pass.set_vertex_buffer(1, self.instance_buffer.slice(..));
         pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint32);

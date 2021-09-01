@@ -1,5 +1,6 @@
 use crate::camera::Camera;
-use crate::chunk::Chunk;
+use crate::chunk::{Chunk, ChunkMesh, ChunkMeshData};
+use crate::chunk_generator::ChunkGenerator;
 use crate::coordinate::{ChunkCoord3D, Coord3D};
 use crate::player::Player;
 use crate::renderer::graphics::Graphics;
@@ -7,14 +8,17 @@ use crate::renderer::pipeline::Type;
 use crate::renderer::renderer::{Renderable, Renderer};
 use crate::uniform::UniformManager;
 use rayon::prelude::*;
+use rayon::ThreadPool;
 use std::collections::HashMap;
+use std::sync::Arc;
 use wgpu::RenderPass;
 
 pub struct World {
-    chunks: HashMap<ChunkCoord3D, Chunk>,
+    pub chunks: HashMap<ChunkCoord3D, Chunk>,
+    pub meshes: HashMap<ChunkCoord3D, ChunkMesh>,
 }
 
-const RENDER_DISTANCE: i32 = 5;
+pub const RENDER_DISTANCE: i32 = 5;
 
 impl Renderable for World {
     fn render<'a>(
@@ -25,84 +29,43 @@ impl Renderable for World {
     ) {
         pass.set_pipeline(&renderer.pipelines.get(&Type::Main).unwrap().pipeline);
 
-        for (_, c) in &self.chunks {
+        for (_, c) in self.meshes.iter() {
             c.render(pass, &uniform);
         }
     }
 }
 
 impl World {
-    pub fn new(graphics: &Graphics, camera: &Camera) -> Self {
+    pub fn new(graphics: &Graphics) -> Self {
         let mut chunks = HashMap::new();
-        Self { chunks }
+        let mut meshes = HashMap::new();
+        Self { chunks, meshes }
     }
 
-    pub fn update(&mut self, graphics: &Graphics, player: &mut Player) {
-        if player.new_chunk_pos() {
-            for x in 0..RENDER_DISTANCE {
-                for z in 0..RENDER_DISTANCE {
-                    if !self.chunks.contains_key(&ChunkCoord3D::new(
-                        x + player.chunk.x,
-                        0,
-                        z + player.chunk.z,
-                    )) {
-                        self.chunks.insert(
-                            ChunkCoord3D::new(x + player.chunk.x, 0, z + player.chunk.z),
-                            Chunk::new(
-                                &graphics,
-                                ChunkCoord3D::new(x + player.chunk.x, 0, z + player.chunk.z),
-                            ),
-                        );
-                    }
-                    if !self.chunks.contains_key(&ChunkCoord3D::new(
-                        -x + player.chunk.x,
-                        0,
-                        z + player.chunk.z,
-                    )) {
-                        self.chunks.insert(
-                            ChunkCoord3D::new(-x + player.chunk.x, 0, z + player.chunk.z),
-                            Chunk::new(
-                                &graphics,
-                                ChunkCoord3D::new(-x + player.chunk.x, 0, z + player.chunk.z),
-                            ),
-                        );
-                    }
-                    if !self.chunks.contains_key(&ChunkCoord3D::new(
-                        -x + player.chunk.x,
-                        0,
-                        -z + player.chunk.z,
-                    )) {
-                        self.chunks.insert(
-                            ChunkCoord3D::new(-x + player.chunk.x, 0, -z + player.chunk.z),
-                            Chunk::new(
-                                &graphics,
-                                ChunkCoord3D::new(-x + player.chunk.x, 0, -z + player.chunk.z),
-                            ),
-                        );
-                    }
-                    if !self.chunks.contains_key(&ChunkCoord3D::new(
-                        x + player.chunk.x,
-                        0,
-                        -z + player.chunk.z,
-                    )) {
-                        self.chunks.insert(
-                            ChunkCoord3D::new(x + player.chunk.x, 0, -z + player.chunk.z),
-                            Chunk::new(
-                                &graphics,
-                                ChunkCoord3D::new(x + player.chunk.x, 0, -z + player.chunk.z),
-                            ),
-                        );
-                    }
-                }
-            }
-            self.remove_unseen_chunks(&player);
-        }
+    pub fn update(
+        &mut self,
+        chunk_gen: &ChunkGenerator,
+        player: &mut Player,
+        pool: &ThreadPool,
+        graphics: &Graphics,
+    ) {
+        chunk_gen.generate(&self, player, &pool);
+        chunk_gen.update_world(self, &graphics);
+        self.remove_unseen_chunks(&player);
     }
 
     fn remove_unseen_chunks(&mut self, player: &Player) {
         self.chunks.retain(|v, _| {
-            v.x < 5 + player.chunk.x && v.z < 5 + player.chunk.z && v.x > -5 + player.chunk.x && v.z > -5 + player.chunk.z
+            v.x < RENDER_DISTANCE + player.chunk.x
+                && v.z < RENDER_DISTANCE + player.chunk.z
+                && v.x > -RENDER_DISTANCE + player.chunk.x
+                && v.z > -RENDER_DISTANCE + player.chunk.z
         });
-
+        self.meshes.retain(|v, _| {
+            v.x < RENDER_DISTANCE + player.chunk.x
+                && v.z < RENDER_DISTANCE + player.chunk.z
+                && v.x > -RENDER_DISTANCE + player.chunk.x
+                && v.z > -RENDER_DISTANCE + player.chunk.z
+        });
     }
 }

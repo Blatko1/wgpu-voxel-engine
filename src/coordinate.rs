@@ -11,7 +11,7 @@ impl Coord3D {
     }
 
     pub fn to_cube_index(&self) -> usize {
-        (self.x + self.z * 16 + self.y * 16 * 16) as usize
+        (self.x + self.z * 32 + self.y * 32 * 32) as usize
     }
 
     /*pub fn to_region_coord(&self) -> RegionCoord3D {
@@ -22,9 +22,9 @@ impl Coord3D {
     }*/
 
     pub fn to_chunk_coord(&self) -> ChunkCoord3D {
-        let x = self.x / 16;
-        let y = self.y / 16;
-        let z = self.z / 16;
+        let x = self.x / 32;
+        let y = self.y / 32;
+        let z = self.z / 32;
         Coord3D { x, y, z }
     }
 }
