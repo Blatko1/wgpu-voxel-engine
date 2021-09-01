@@ -19,8 +19,8 @@ impl Texture {
     pub fn create_depth_texture_view(graphics: &Graphics) -> wgpu::TextureView {
         let size = {
             wgpu::Extent3d {
-                width: graphics.sc_desc.width,
-                height: graphics.sc_desc.height,
+                width: graphics.surface_config.width,
+                height: graphics.surface_config.height,
                 depth_or_array_layers: 1,
             }
         };
@@ -31,7 +31,7 @@ impl Texture {
             sample_count: 1,
             dimension: wgpu::TextureDimension::D2,
             format: Self::DEPTH_FORMAT,
-            usage: wgpu::TextureUsage::RENDER_ATTACHMENT | wgpu::TextureUsage::SAMPLED,
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::TEXTURE_BINDING,
         };
         let texture = graphics.device.create_texture(&desc);
 
@@ -58,13 +58,13 @@ impl Texture {
         let texture = graphics.device.create_texture(&wgpu::TextureDescriptor {
             label,
             size,
-            mip_level_count,
+            mip_level_count: 1,
             sample_count: 1,
             dimension: wgpu::TextureDimension::D2,
             format: wgpu::TextureFormat::Rgba8UnormSrgb,
-            usage: wgpu::TextureUsage::SAMPLED
-                | wgpu::TextureUsage::RENDER_ATTACHMENT
-                | wgpu::TextureUsage::COPY_DST,
+            usage: wgpu::TextureUsages::TEXTURE_BINDING
+                | wgpu::TextureUsages::RENDER_ATTACHMENT
+                | wgpu::TextureUsages::COPY_DST,
         });
 
         graphics.queue.write_texture(
@@ -72,6 +72,7 @@ impl Texture {
                 texture: &texture,
                 mip_level: 0,
                 origin: wgpu::Origin3d::ZERO,
+                aspect: wgpu::TextureAspect::All,
             },
             &rgba,
             wgpu::ImageDataLayout {
@@ -103,41 +104,29 @@ impl Texture {
         let path = std::path::Path::new(std::env::current_dir().unwrap().as_os_str()).join("res");
         let shader_path =
             std::path::Path::new(std::env::current_dir().unwrap().as_os_str()).join("src/shaders");
-        let vert_shader = Pipeline::load_shader(
-            &graphics,
-            shader_path.join("blit.vert.spv"),
-            wgpu::ShaderFlags::all(),
-        );
-        let frag_shader = Pipeline::load_shader(
-            &graphics,
-            shader_path.join("blit.frag.spv"),
-            wgpu::ShaderFlags::all(),
-        );
-
-        let mipmap_pipeline =
-            graphics
-                .device
-                .create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-                    label: None,
-                    layout: None,
-                    vertex: wgpu::VertexState {
-                        module: &vert_shader,
-                        entry_point: "main",
-                        buffers: &[],
-                    },
-                    primitive: wgpu::PrimitiveState {
-                        topology: wgpu::PrimitiveTopology::TriangleList,
-                        ..Default::default()
-                    },
-                    depth_stencil: None,
-                    multisample: wgpu::MultisampleState::default(),
-                    fragment: Some(wgpu::FragmentState {
-                        module: &frag_shader,
-                        entry_point: "main",
-                        targets: &[wgpu::TextureFormat::Rgba8UnormSrgb.into()],
-                    }),
-                });
-
+        let vert_shader = Pipeline::load_shader(&graphics, shader_path.join("blit.vert.spv"));
+        let frag_shader = Pipeline::load_shader(&graphics, shader_path.join("blit.frag.spv"));
+        /*let mipmap_pipeline =
+            graphics.device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+                label: Some("blit"),
+                layout: None,
+                vertex: wgpu::VertexState {
+                    module: &vert_shader,
+                    entry_point: "main",
+                    buffers: &[],
+                },
+                fragment: Some(wgpu::FragmentState {
+                    module: &frag_shader,
+                    entry_point: "main",
+                    targets: &[wgpu::TextureFormat::Rgba8UnormSrgb.into()],
+                }),
+                primitive: wgpu::PrimitiveState {
+                    topology: wgpu::PrimitiveTopology::TriangleStrip,
+                    ..Default::default()
+                },
+                depth_stencil: None,
+                multisample: wgpu::MultisampleState::default(),
+            });
         let sampler = graphics.device.create_sampler(&wgpu::SamplerDescriptor {
             label: None,
             address_mode_u: wgpu::AddressMode::ClampToEdge,
@@ -154,17 +143,17 @@ impl Texture {
             .create_command_encoder(&wgpu::CommandEncoderDescriptor {
                 label: Some("mipmap command encoder"),
             });
-
+*/
         let mut textures = Vec::new();
         // Grass
         textures.push(Self::from_path(&graphics, path.join("wolf.jpg"))?);
         textures.push(Self::from_path(&graphics, path.join("grass_bottom.png"))?);
         textures.push(Self::from_path(&graphics, path.join("grass_top.png"))?);
 
-        for t in textures.iter() {
+       /*for t in textures.iter() {
             t.generate_mipmaps(&graphics, &mipmap_pipeline, &sampler, &mut encoder);
         }
-        graphics.queue.submit(Some(encoder.finish()));
+        graphics.queue.submit(Some(encoder.finish()));*/
 
         Ok(textures)
     }

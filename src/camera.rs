@@ -29,7 +29,7 @@ impl Camera {
             eye: Point3::new(0., 0., 1.),
             target: Point3::new(0., 0., -1.),
             up: Vector3::y(),
-            aspect: graphics.sc_desc.width as f32 / graphics.sc_desc.height as f32,
+            aspect: graphics.surface_config.width as f32 / graphics.surface_config.height as f32,
             fov: 60.,
             near: 0.01,
             far: 100.0,
@@ -54,7 +54,7 @@ impl Camera {
     }
 
     pub fn resize(&mut self, graphics: &Graphics) {
-        self.aspect = graphics.sc_desc.width as f32 / graphics.sc_desc.height as f32;
+        self.aspect = graphics.surface_config.width as f32 / graphics.surface_config.height as f32;
     }
 
     pub fn update(&mut self) {

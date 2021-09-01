@@ -76,11 +76,11 @@ impl Chunk {
                             ));
                         }
                     } else {
-                            quads.push(Quad::new(
-                                Coord3D::new(pos_x, pos_y, pos_z),
-                                Rotation::LEFT,
-                                2,
-                            ));
+                        quads.push(Quad::new(
+                            Coord3D::new(pos_x, pos_y, pos_z),
+                            Rotation::LEFT,
+                            2,
+                        ));
                     }
                     if x < 32 - 1 {
                         if cubes[(x + 1) + 32 * z + 32 * 32 * y].is_air == true {
@@ -186,7 +186,7 @@ impl Chunk {
             vertex_data,
             index_data,
             instance_data,
-            instance_len
+            instance_len,
         }
     }
 }
@@ -195,7 +195,7 @@ pub struct ChunkMeshData {
     vertex_data: Vec<u8>,
     index_data: Vec<u8>,
     instance_data: Vec<u8>,
-    instance_len: usize
+    instance_len: usize,
 }
 
 pub struct ChunkMesh {
@@ -217,14 +217,14 @@ impl ChunkMesh {
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: None,
                 contents: data.vertex_data.as_slice(),
-                usage: wgpu::BufferUsage::VERTEX,
+                usage: wgpu::BufferUsages::VERTEX,
             });
         let index_buffer = graphics
             .device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: None,
                 contents: data.index_data.as_slice(),
-                usage: wgpu::BufferUsage::INDEX,
+                usage: wgpu::BufferUsages::INDEX,
             });
         let instance_buffer =
             graphics
@@ -232,7 +232,7 @@ impl ChunkMesh {
                 .create_buffer_init(&wgpu::util::BufferInitDescriptor {
                     label: None,
                     contents: data.instance_data.as_slice(),
-                    usage: wgpu::BufferUsage::VERTEX | wgpu::BufferUsage::COPY_DST,
+                    usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
                 });
         let indices_len = quad::INDICES.len();
         let instances_len = data.instance_len;

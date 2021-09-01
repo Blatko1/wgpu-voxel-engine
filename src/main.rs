@@ -8,6 +8,7 @@ mod chunk;
 mod chunk_generator;
 mod coordinate;
 mod cube;
+mod debug_info;
 mod engine;
 mod player;
 mod quad;
@@ -31,7 +32,7 @@ struct Client {
 
 impl Client {
     fn new(window: &winit::window::Window) -> Self {
-        let mut graphics = block_on(Graphics::new(&window));
+        let graphics = block_on(Graphics::new(&window));
         let engine = Engine::new(&graphics);
         let pool = rayon::ThreadPoolBuilder::new()
             .num_threads(10)
@@ -44,7 +45,7 @@ impl Client {
         }
     }
 
-    fn render(&mut self) -> Result<(), wgpu::SwapChainError> {
+    fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
         //Updating
         self.engine.update(&self.graphics, &self.pool);
 
@@ -110,12 +111,14 @@ fn main() {
             },
             Event::DeviceEvent { event, .. } if focus => {
                 client.engine.input(&event);
-                window.set_cursor_position(winit::dpi::Position::Physical(
-                    winit::dpi::PhysicalPosition::new(
-                        (window.inner_size().width / 2) as i32,
-                        (window.inner_size().height / 2) as i32,
-                    ),
-                )).unwrap();
+                window
+                    .set_cursor_position(winit::dpi::Position::Physical(
+                        winit::dpi::PhysicalPosition::new(
+                            (window.inner_size().width / 2) as i32,
+                            (window.inner_size().height / 2) as i32,
+                        ),
+                    ))
+                    .unwrap();
             }
             Event::MainEventsCleared => window.request_redraw(),
 
@@ -123,9 +126,9 @@ fn main() {
                 match client.render() {
                     Ok(_) => {}
                     // Recreate the swap_chain if lost
-                    Err(wgpu::SwapChainError::Lost) => client.resize(client.graphics.size),
+                    Err(wgpu::SurfaceError::Lost) => client.resize(client.graphics.size),
                     // The system is out of memory, we should probably quit
-                    Err(wgpu::SwapChainError::OutOfMemory) => *control_flow = ControlFlow::Exit,
+                    Err(wgpu::SurfaceError::OutOfMemory) => *control_flow = ControlFlow::Exit,
                     // All other errors (Outdated, Timeout) should be resolved by the next frame
                     Err(e) => eprintln!("{:?}", e),
                 }
