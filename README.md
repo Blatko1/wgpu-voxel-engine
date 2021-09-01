@@ -6,8 +6,9 @@ Primary goal of this project is to make *procedural terrain generation* similar 
 
 **TODOs**:
 >~~- Add mipmapping~~
-- Add debug menu 
-- Add infinite chunk generation
+> 
+>~~- Add infinite chunk generation with multithreading optimisations~~
+- Add debug menu
 - Add lightning
 - Add frustum culling
 - Divide chunks into bigger regions

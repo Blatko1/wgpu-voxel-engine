@@ -14,13 +14,6 @@ impl Coord3D {
         (self.x + self.z * 32 + self.y * 32 * 32) as usize
     }
 
-    /*pub fn to_region_coord(&self) -> RegionCoord3D {
-        let x = self.x / 256;
-        let y = self.y / 256;
-        let z = self.z / 256;
-        Coord3D { x, y, z }
-    }*/
-
     pub fn to_chunk_coord(&self) -> ChunkCoord3D {
         let x = self.x / 32;
         let y = self.y / 32;

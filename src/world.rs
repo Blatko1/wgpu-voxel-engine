@@ -18,7 +18,7 @@ pub struct World {
     pub meshes: HashMap<ChunkCoord3D, ChunkMesh>,
 }
 
-pub const RENDER_DISTANCE: i32 = 5;
+pub const RENDER_DISTANCE: i32 = 1;
 
 impl Renderable for World {
     fn render<'a>(
@@ -50,11 +50,10 @@ impl World {
         graphics: &Graphics,
     ) {
         chunk_gen.generate(&self, player, &pool);
-        chunk_gen.update_world(self, &graphics);
-        self.remove_unseen_chunks(&player);
+        chunk_gen.update_world(self, &graphics, &player);
     }
 
-    fn remove_unseen_chunks(&mut self, player: &Player) {
+    pub fn remove_unseen_chunks(&mut self, player: &Player) {
         self.chunks.retain(|v, _| {
             v.x < RENDER_DISTANCE + player.chunk.x
                 && v.z < RENDER_DISTANCE + player.chunk.z

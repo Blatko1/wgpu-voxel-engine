@@ -39,7 +39,7 @@ impl Pipeline {
                     front_face: wgpu::FrontFace::Ccw,
                     cull_mode: Some(wgpu::Face::Back),
                     clamp_depth: false,
-                    polygon_mode: wgpu::PolygonMode::Fill,
+                    polygon_mode: wgpu::PolygonMode::Line,
                     conservative: false,
                 },
                 depth_stencil: depth_format.map(|f| wgpu::DepthStencilState {

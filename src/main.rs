@@ -34,7 +34,7 @@ impl Client {
         let mut graphics = block_on(Graphics::new(&window));
         let engine = Engine::new(&graphics);
         let pool = rayon::ThreadPoolBuilder::new()
-            .num_threads(8)
+            .num_threads(10)
             .build()
             .unwrap();
         Self {
@@ -115,7 +115,7 @@ fn main() {
                         (window.inner_size().width / 2) as i32,
                         (window.inner_size().height / 2) as i32,
                     ),
-                ));
+                )).unwrap();
             }
             Event::MainEventsCleared => window.request_redraw(),
 
