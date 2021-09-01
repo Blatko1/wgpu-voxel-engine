@@ -3,14 +3,14 @@ pub struct Graphics {
     pub surface: wgpu::Surface,
     pub device: wgpu::Device,
     pub queue: wgpu::Queue,
-    pub sc_desc: wgpu::SwapChainDescriptor,
-    pub swap_chain: wgpu::SwapChain,
+    pub surface_config: wgpu::SurfaceConfiguration,
 }
 
 impl Graphics {
     pub async fn new(window: &winit::window::Window) -> Self {
         let size = window.inner_size();
-        let instance = wgpu::Instance::new(wgpu::BackendBit::PRIMARY);
+        let backend = wgpu::util::backend_bits_from_env().unwrap_or(wgpu::Backends::VULKAN);
+        let instance = wgpu::Instance::new(backend);
         let surface = unsafe { instance.create_surface(window) };
         let adapter = instance
             .request_adapter(&wgpu::RequestAdapterOptions {
@@ -23,38 +23,38 @@ impl Graphics {
             .request_device(
                 &wgpu::DeviceDescriptor {
                     label: Some("Device"),
-                    features: wgpu::Features::SAMPLED_TEXTURE_ARRAY_NON_UNIFORM_INDEXING
-                        | wgpu::Features::SAMPLED_TEXTURE_BINDING_ARRAY
+                    features: wgpu::Features::SAMPLED_TEXTURE_AND_STORAGE_BUFFER_ARRAY_NON_UNIFORM_INDEXING
+                        | wgpu::Features::TEXTURE_BINDING_ARRAY
                         | wgpu::Features::NON_FILL_POLYGON_MODE
-                        | wgpu::Features::UNSIZED_BINDING_ARRAY,
-                    limits: wgpu::Limits::default(),
+                        | wgpu::Features::UNSIZED_BINDING_ARRAY
+                        | wgpu::Features::SPIRV_SHADER_PASSTHROUGH,
+                    limits: adapter.limits(),
                 },
                 None,
             )
             .await
             .unwrap();
-        let sc_desc = wgpu::SwapChainDescriptor {
-            usage: wgpu::TextureUsage::RENDER_ATTACHMENT,
-            format: adapter.get_swap_chain_preferred_format(&surface).unwrap(),
+        let surface_config = wgpu::SurfaceConfiguration {
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+            format: surface.get_preferred_format(&adapter).unwrap(),
             width: size.width,
             height: size.height,
             present_mode: wgpu::PresentMode::Fifo,
         };
-        let swap_chain = device.create_swap_chain(&surface, &sc_desc);
+        surface.configure(&device, &surface_config);
         Self {
             size,
             surface,
             device,
             queue,
-            sc_desc,
-            swap_chain,
+            surface_config,
         }
     }
 
     pub fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
         self.size = new_size;
-        self.sc_desc.width = new_size.width;
-        self.sc_desc.height = new_size.height;
-        self.swap_chain = self.device.create_swap_chain(&self.surface, &self.sc_desc);
+        self.surface_config.width = self.size.width.max(1);
+        self.surface_config.height = self.size.height.max(1);
+        self.surface.configure(&self.device, &self.surface_config);
     }
 }

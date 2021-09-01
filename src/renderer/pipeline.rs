@@ -20,9 +20,8 @@ impl Pipeline {
         layout: Option<&wgpu::PipelineLayout>,
         depth_format: Option<wgpu::TextureFormat>,
     ) -> Self {
-        let vertex_shader = Pipeline::load_shader(&graphics, v_shader, wgpu::ShaderFlags::all());
-        let fragment_shader =
-            Pipeline::load_shader(&graphics, f_shader, wgpu::ShaderFlags::empty());
+        let vertex_shader = Pipeline::load_shader(&graphics, v_shader);
+        let fragment_shader = Pipeline::load_shader(&graphics, f_shader);
         let pipeline = graphics
             .device
             .create_render_pipeline(&wgpu::RenderPipelineDescriptor {
@@ -58,9 +57,9 @@ impl Pipeline {
                     module: &fragment_shader,
                     entry_point: "main",
                     targets: &[wgpu::ColorTargetState {
-                        format: graphics.sc_desc.format,
+                        format: graphics.surface_config.format,
                         blend: Some(wgpu::BlendState::REPLACE),
-                        write_mask: wgpu::ColorWrite::ALL,
+                        write_mask: wgpu::ColorWrites::ALL,
                     }],
                 }),
             });
@@ -88,24 +87,19 @@ impl Pipeline {
             shader_dir.join("fragment.frag.spv"),
             vertex_buffer_layouts,
             Some(layout),
-            Some(Texture::DEPTH_FORMAT),
+            Some(Texture::DEPTH_FORMAT)
         )
     }
 
-    pub fn load_shader<P: AsRef<Path>>(
-        graphics: &Graphics,
-        path: P,
-        flags: wgpu::ShaderFlags,
-    ) -> wgpu::ShaderModule {
+    pub fn load_shader<P: AsRef<Path>>(graphics: &Graphics, path: P) -> wgpu::ShaderModule {
         let buf = path.as_ref().to_path_buf();
         let label = buf.to_str().unwrap();
-        graphics
+        unsafe { graphics
             .device
-            .create_shader_module(&wgpu::ShaderModuleDescriptor {
+            .create_shader_module_spirv(&wgpu::ShaderModuleDescriptorSpirV {
                 label: Some(&format!("{} shader", label)),
-                source: wgpu::util::make_spirv(&fs::read(path).unwrap()),
-                flags,
-            })
+                source: wgpu::util::make_spirv_raw(&fs::read(path).unwrap()),
+            }) }
     }
 }
 

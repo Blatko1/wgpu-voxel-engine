@@ -1,10 +1,10 @@
-use crate::chunk::{Chunk, ChunkMeshData, ChunkMesh};
+use crate::chunk::{Chunk, ChunkMesh, ChunkMeshData};
 use crate::coordinate::ChunkCoord3D;
 use crate::player::Player;
 use crate::renderer::graphics::Graphics;
 use crate::world::{self, World};
-use std::sync::mpsc::{Receiver, RecvError, Sender};
 use rayon::prelude::*;
+use std::sync::mpsc::{Receiver, RecvError, Sender};
 
 pub struct ChunkGenerator {
     sender: Sender<(ChunkCoord3D, Chunk, ChunkMeshData)>,
@@ -76,20 +76,23 @@ impl ChunkGenerator {
             let chunk = player.chunk.clone();
             for x in 0..world::RENDER_DISTANCE {
                 for z in 0..world::RENDER_DISTANCE {
-                    if !world.chunks.contains_key(&ChunkCoord3D::new(x + chunk.x, 0, z + chunk.z)) {
+                    if !world
+                        .chunks
+                        .contains_key(&ChunkCoord3D::new(x + chunk.x, 0, z + chunk.z))
+                    {
                         let sender = self.sender.clone();
                         pool.spawn(move || {
                             let c = Chunk::new(ChunkCoord3D::new(x + chunk.x, 0, z + chunk.z));
                             let mesh_data = c.generate_data();
-                            let data = (
-                                ChunkCoord3D::new(x + chunk.x, 0, z + chunk.z),
-                                c,
-                                mesh_data
-                            );
+                            let data =
+                                (ChunkCoord3D::new(x + chunk.x, 0, z + chunk.z), c, mesh_data);
                             sender.send(data).unwrap();
                         });
                     }
-                    if !world.chunks.contains_key(&ChunkCoord3D::new(-x + chunk.x, 0, z + chunk.z)) {
+                    if !world
+                        .chunks
+                        .contains_key(&ChunkCoord3D::new(-x + chunk.x, 0, z + chunk.z))
+                    {
                         let sender = self.sender.clone();
                         pool.spawn(move || {
                             let c = Chunk::new(ChunkCoord3D::new(-x + chunk.x, 0, z + chunk.z));
@@ -97,12 +100,15 @@ impl ChunkGenerator {
                             let data = (
                                 ChunkCoord3D::new(-x + chunk.x, 0, z + chunk.z),
                                 c,
-                                mesh_data
+                                mesh_data,
                             );
                             sender.send(data).unwrap();
                         });
                     }
-                    if !world.chunks.contains_key(&ChunkCoord3D::new(-x + chunk.x, 0, -z + chunk.z)) {
+                    if !world
+                        .chunks
+                        .contains_key(&ChunkCoord3D::new(-x + chunk.x, 0, -z + chunk.z))
+                    {
                         let sender = self.sender.clone();
                         pool.spawn(move || {
                             let c = Chunk::new(ChunkCoord3D::new(-x + chunk.x, 0, -z + chunk.z));
@@ -110,12 +116,15 @@ impl ChunkGenerator {
                             let data = (
                                 ChunkCoord3D::new(-x + chunk.x, 0, -z + chunk.z),
                                 c,
-                                mesh_data
+                                mesh_data,
                             );
                             sender.send(data).unwrap();
                         });
                     }
-                    if !world.chunks.contains_key(&ChunkCoord3D::new(x + chunk.x, 0, -z + chunk.z)) {
+                    if !world
+                        .chunks
+                        .contains_key(&ChunkCoord3D::new(x + chunk.x, 0, -z + chunk.z))
+                    {
                         let sender = self.sender.clone();
                         pool.spawn(move || {
                             let c = Chunk::new(ChunkCoord3D::new(x + chunk.x, 0, -z + chunk.z));
@@ -123,7 +132,7 @@ impl ChunkGenerator {
                             let data = (
                                 ChunkCoord3D::new(x + chunk.x, 0, -z + chunk.z),
                                 c,
-                                mesh_data
+                                mesh_data,
                             );
                             sender.send(data).unwrap();
                         });

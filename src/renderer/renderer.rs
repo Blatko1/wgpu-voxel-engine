@@ -26,15 +26,19 @@ impl Renderer {
         graphics: &Graphics,
         world: &World,
         uniform: &UniformManager,
-    ) -> Result<(), wgpu::SwapChainError> {
+    ) -> Result<(), wgpu::SurfaceError> {
         let mut encoder = graphics
             .device
             .create_command_encoder(&wgpu::CommandEncoderDescriptor {
                 label: Some("Main Command Encoder"),
             });
-        let view = &graphics.swap_chain.get_current_frame()?.output.view;
-        let render_pass_builder = RenderPassBuilder::init(view, &self.depth_texture_view);
+        let frame = graphics
+            .surface
+            .get_current_frame()?
+            .output;
         {
+            let view = frame.texture.create_view(&wgpu::TextureViewDescriptor::default());
+            let render_pass_builder = RenderPassBuilder::init(&view, &self.depth_texture_view);
             let desc = render_pass_builder.build();
             let mut pass = encoder.begin_render_pass(&desc);
             world.render(&mut pass, &self, &uniform);
@@ -63,9 +67,9 @@ struct RenderPassBuilder<'a> {
 }
 
 impl<'a> RenderPassBuilder<'a> {
-    fn init(frame_view: &'a wgpu::TextureView, depth_view: &'a wgpu::TextureView) -> Self {
+    fn init(frame: &'a wgpu::TextureView, depth_view: &'a wgpu::TextureView) -> Self {
         let color_attachments = vec![wgpu::RenderPassColorAttachment {
-            view: frame_view,
+            view: frame,
             resolve_target: None,
             ops: wgpu::Operations {
                 load: wgpu::LoadOp::Clear(wgpu::Color {
@@ -95,7 +99,7 @@ impl<'a> RenderPassBuilder<'a> {
         wgpu::RenderPassDescriptor {
             label: Some("Main Render Pass"),
             color_attachments: &self.color_attachments,
-            depth_stencil_attachment: self.depth_attachment.clone(),
+            depth_stencil_attachment: self.depth_attachment.clone()
         }
     }
 }
