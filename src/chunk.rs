@@ -76,11 +76,11 @@ impl Chunk {
                             ));
                         }
                     } else {
-                        quads.push(Quad::new(
-                            Coord3D::new(pos_x, pos_y, pos_z),
-                            Rotation::LEFT,
-                            2,
-                        ));
+                            quads.push(Quad::new(
+                                Coord3D::new(pos_x, pos_y, pos_z),
+                                Rotation::LEFT,
+                                2,
+                            ));
                     }
                     if x < 32 - 1 {
                         if cubes[(x + 1) + 32 * z + 32 * 32 * y].is_air == true {
