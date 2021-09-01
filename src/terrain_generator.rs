@@ -1,6 +1,4 @@
 use bracket_noise::prelude::*;
-use core::arch::x86_64::_mm256_set1_ps;
-use simdnoise::*;
 
 pub struct TerrainGenerator {
     noise: FastNoise,

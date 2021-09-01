@@ -5,6 +5,7 @@ use winit::window::WindowBuilder;
 
 mod camera;
 mod chunk;
+mod chunk_generator;
 mod coordinate;
 mod cube;
 mod engine;
@@ -19,23 +20,33 @@ mod world;
 
 use crate::renderer::graphics::Graphics;
 use engine::Engine;
+use std::sync::Arc;
+use winit::dpi::PhysicalSize;
 
 struct Client {
     graphics: Graphics,
-
     engine: Engine,
+    pool: rayon::ThreadPool,
 }
 
 impl Client {
     fn new(window: &winit::window::Window) -> Self {
-        let graphics = block_on(Graphics::new(&window));
+        let mut graphics = block_on(Graphics::new(&window));
         let engine = Engine::new(&graphics);
-        Self { graphics, engine }
+        let pool = rayon::ThreadPoolBuilder::new()
+            .num_threads(8)
+            .build()
+            .unwrap();
+        Self {
+            graphics,
+            engine,
+            pool,
+        }
     }
 
     fn render(&mut self) -> Result<(), wgpu::SwapChainError> {
         //Updating
-        self.engine.update(&self.graphics);
+        self.engine.update(&self.graphics, &self.pool);
 
         //Rendering
         self.engine.render(&self.graphics)?;
@@ -97,7 +108,15 @@ fn main() {
                 }
                 _ => (),
             },
-            Event::DeviceEvent { event, .. } if focus => client.engine.input(&event),
+            Event::DeviceEvent { event, .. } if focus => {
+                client.engine.input(&event);
+                window.set_cursor_position(winit::dpi::Position::Physical(
+                    winit::dpi::PhysicalPosition::new(
+                        (window.inner_size().width / 2) as i32,
+                        (window.inner_size().height / 2) as i32,
+                    ),
+                ));
+            }
             Event::MainEventsCleared => window.request_redraw(),
 
             Event::RedrawRequested(_) => {
