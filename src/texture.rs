@@ -1,5 +1,4 @@
 use crate::renderer::graphics::Graphics;
-use crate::renderer::pipeline::Pipeline;
 use anyhow::Result;
 use image::{DynamicImage, GenericImageView};
 use std::num::NonZeroU32;
@@ -103,7 +102,9 @@ impl Texture {
     pub fn load_textures(graphics: &Graphics) -> Result<Vec<Texture>> {
         let path = std::path::Path::new(std::env::current_dir().unwrap().as_os_str()).join("res");
 
-        let blit_shader = graphics.device.create_shader_module(&wgpu::include_wgsl!("shaders/blit.wgsl"));
+        let blit_shader = graphics
+            .device
+            .create_shader_module(&wgpu::include_wgsl!("shaders/blit.wgsl"));
         let mipmap_pipeline =
             graphics
                 .device
@@ -127,7 +128,7 @@ impl Texture {
                     depth_stencil: None,
                     multisample: wgpu::MultisampleState::default(),
                 });
-        let bind_group_layout = mipmap_pipeline.get_bind_group_layout(0);
+
         let sampler = graphics.device.create_sampler(&wgpu::SamplerDescriptor {
             label: None,
             address_mode_u: wgpu::AddressMode::ClampToEdge,

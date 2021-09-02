@@ -3,7 +3,6 @@ use super::instance::InstanceRaw;
 use super::vertex::Vertex;
 use crate::texture::Texture;
 use crate::uniform::UniformManager;
-use std::fs;
 use std::path::Path;
 
 pub struct Pipeline {
@@ -94,12 +93,14 @@ impl Pipeline {
     pub fn load_shader<P: AsRef<Path>>(graphics: &Graphics, path: P) -> wgpu::ShaderModule {
         let buf = path.as_ref().to_path_buf();
         let label = buf.to_str().unwrap();
-        unsafe { graphics
-            .device
-            .create_shader_module_spirv(&wgpu::ShaderModuleDescriptorSpirV {
-                label: Some(&format!("{} shader", label)),
-                source: wgpu::util::make_spirv_raw(&std::fs::read(path).unwrap()),
-            }) }
+        unsafe {
+            graphics
+                .device
+                .create_shader_module_spirv(&wgpu::ShaderModuleDescriptorSpirV {
+                    label: Some(&format!("{} shader", label)),
+                    source: wgpu::util::make_spirv_raw(&std::fs::read(path).unwrap()),
+                })
+        }
     }
 }
 

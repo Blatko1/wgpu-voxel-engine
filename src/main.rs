@@ -1,4 +1,3 @@
-use futures::executor::block_on;
 use winit::event::{ElementState, Event, KeyboardInput, MouseButton, VirtualKeyCode, WindowEvent};
 use winit::event_loop::{ControlFlow, EventLoop};
 use winit::window::WindowBuilder;
@@ -12,7 +11,6 @@ mod debug_info;
 mod engine;
 mod player;
 mod quad;
-mod region;
 mod renderer;
 mod terrain_generator;
 mod texture;
@@ -21,8 +19,6 @@ mod world;
 
 use crate::renderer::graphics::Graphics;
 use engine::Engine;
-use std::sync::Arc;
-use winit::dpi::PhysicalSize;
 
 struct Client {
     graphics: Graphics,

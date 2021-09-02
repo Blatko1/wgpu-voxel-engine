@@ -1,5 +1,7 @@
 use super::graphics::Graphics;
 use super::pipeline::{Pipeline, Type};
+use crate::camera::Camera;
+use crate::debug_info::DebugInfo;
 use crate::texture::Texture;
 use crate::uniform::UniformManager;
 use crate::world::World;
@@ -26,6 +28,8 @@ impl Renderer {
         graphics: &Graphics,
         world: &World,
         uniform: &UniformManager,
+        debug_info: &mut DebugInfo,
+        camera: &Camera,
     ) -> Result<(), wgpu::SurfaceError> {
         let mut encoder = graphics
             .device
@@ -42,7 +46,13 @@ impl Renderer {
             let mut pass = encoder.begin_render_pass(&desc);
             world.render(&mut pass, &self, &uniform);
         }
+        let view = frame
+            .texture
+            .create_view(&wgpu::TextureViewDescriptor::default());
+        debug_info.draw(&graphics, &mut encoder, &view, &camera).unwrap();
+        debug_info.finish();
         graphics.queue.submit(Some(encoder.finish()));
+
         Ok(())
     }
 

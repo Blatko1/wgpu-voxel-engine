@@ -10,14 +10,10 @@ impl Coord3D {
         Self { x, y, z }
     }
 
-    pub fn to_cube_index(&self) -> usize {
-        (self.x + self.z * 32 + self.y * 32 * 32) as usize
-    }
-
     pub fn to_chunk_coord(&self) -> ChunkCoord3D {
-        let x = self.x / 32;
-        let y = self.y / 32;
-        let z = self.z / 32;
+        let x = self.x >> 5;
+        let y = self.y >> 5;
+        let z = self.z >> 5;
         Coord3D { x, y, z }
     }
 }
