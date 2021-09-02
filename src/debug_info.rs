@@ -1,4 +1,5 @@
 use crate::camera::Camera;
+use crate::coordinate::Coord3D;
 use crate::renderer::graphics::Graphics;
 use futures::task::SpawnExt;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
@@ -28,9 +29,8 @@ impl DebugInfoBuilder {
     }
 
     pub fn build(&self, graphics: &Graphics) -> Result<DebugInfo, Box<dyn std::error::Error>> {
-        let font = ab_glyph::FontArc::try_from_slice(include_bytes!(
-            "../res/fonts/Inconsolata_Expanded-Medium.ttf"
-        ))?;
+        let font =
+            ab_glyph::FontArc::try_from_slice(include_bytes!("../res/fonts/FiraCode-Medium.ttf"))?;
         let brush = GlyphBrushBuilder::using_font(font).build(&graphics.device, self.render_format);
 
         let staging_belt = wgpu::util::StagingBelt::new(1024);
@@ -42,7 +42,7 @@ impl DebugInfoBuilder {
             scale: self.scale,
             screen_bounds: self.screen_bounds,
             brush,
-            text: vec![DebugTools::FPS, DebugTools::Position],
+            text: vec![DebugTools::FPS, DebugTools::Position, DebugTools::Chunk],
             fps: 0.,
             staging_belt,
             local_pool,
@@ -70,7 +70,7 @@ pub struct DebugInfo {
 impl DebugInfo {
     pub fn draw<'a>(
         &mut self,
-        device: &wgpu::Device,
+        graphics: &Graphics,
         encoder: &mut wgpu::CommandEncoder,
         target: &wgpu::TextureView,
         camera: &Camera,
@@ -79,6 +79,16 @@ impl DebugInfo {
         let pos = String::from(format!(
             "Position: x: {:.2}, y: {:.2}, z: {:.2}\n",
             camera.eye.x, camera.eye.y, camera.eye.z
+        ));
+        let coords = Coord3D::new(
+            camera.eye.x.floor() as i32,
+            camera.eye.y.floor() as i32,
+            camera.eye.z.floor() as i32,
+        )
+        .to_chunk_coord();
+        let chunk = String::from(format!(
+            "Chunk: x: {}, y: {}, z: {}",
+            coords.x, coords.y, coords.z
         ));
         let mut debug_text: Vec<Text> = Vec::new();
         for t in self.text.iter() {
@@ -97,6 +107,13 @@ impl DebugInfo {
                             .with_scale(self.scale),
                     );
                 }
+                DebugTools::Chunk => {
+                    debug_text.push(
+                        Text::new(&chunk)
+                            .with_color([1., 1., 1., 1.])
+                            .with_scale(self.scale),
+                    );
+                }
             }
         }
         self.brush.queue(Section {
@@ -106,10 +123,10 @@ impl DebugInfo {
             text: debug_text,
         });
         self.brush.draw_queued(
-            device,
+            &graphics.device,
             &mut self.staging_belt,
             encoder,
-            target,
+            &target,
             self.screen_bounds.0,
             self.screen_bounds.1,
         )
@@ -145,4 +162,5 @@ impl DebugInfo {
 pub enum DebugTools {
     FPS,
     Position,
+    Chunk,
 }

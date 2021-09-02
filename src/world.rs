@@ -1,16 +1,13 @@
-use crate::camera::Camera;
-use crate::chunk::{Chunk, ChunkMesh, ChunkMeshData};
+use crate::chunk::{Chunk, ChunkMesh};
 use crate::chunk_generator::ChunkGenerator;
-use crate::coordinate::{ChunkCoord3D, Coord3D};
+use crate::coordinate::ChunkCoord3D;
 use crate::player::Player;
 use crate::renderer::graphics::Graphics;
 use crate::renderer::pipeline::Type;
 use crate::renderer::renderer::{Renderable, Renderer};
 use crate::uniform::UniformManager;
-use rayon::prelude::*;
 use rayon::ThreadPool;
 use std::collections::HashMap;
-use std::sync::Arc;
 use wgpu::RenderPass;
 
 pub struct World {
@@ -36,9 +33,9 @@ impl Renderable for World {
 }
 
 impl World {
-    pub fn new(graphics: &Graphics) -> Self {
-        let mut chunks = HashMap::new();
-        let mut meshes = HashMap::new();
+    pub fn new() -> Self {
+        let chunks = HashMap::new();
+        let meshes = HashMap::new();
         Self { chunks, meshes }
     }
 

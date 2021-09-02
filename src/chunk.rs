@@ -4,16 +4,13 @@ use crate::quad::{self, Quad, Rotation};
 use crate::renderer::graphics::Graphics;
 use crate::terrain_generator::TerrainGenerator;
 use crate::uniform::{SetUniforms, UniformManager};
-use rayon::prelude::*;
-use std::sync::mpsc::channel;
-use std::time::{SystemTime, UNIX_EPOCH};
 use wgpu::util::DeviceExt;
+use rayon::iter::IntoParallelIterator;
+use rayon::iter::ParallelIterator;
 
 const CHUNK_LENGTH: usize = 32;
 const CHUNK_WIDTH: usize = 32;
 const CHUNK_HEIGHT: usize = 32;
-
-const CHUNK_SIZE: usize = CHUNK_WIDTH * CHUNK_LENGTH * CHUNK_HEIGHT;
 
 pub struct Chunk {
     position: ChunkCoord3D,
@@ -25,8 +22,8 @@ impl Chunk {
     pub fn new(position: ChunkCoord3D) -> Self {
         let mut cubes = Vec::new();
         Chunk::empty_chunk(&mut cubes, position);
-        Chunk::generate_terrain(&mut cubes, position);
-        let faces = Chunk::generate_faces(&mut cubes, position);
+        Chunk::generate_terrain(&mut cubes);
+        let faces = Chunk::generate_faces(&mut cubes);
         Self {
             position,
             cubes,
@@ -34,9 +31,9 @@ impl Chunk {
         }
     }
 
-    fn generate_terrain(cubes: &mut Vec<Cube>, pos: ChunkCoord3D) {
+    fn generate_terrain(cubes: &mut Vec<Cube>) {
         let noise = TerrainGenerator::new(1);
-        cubes.into_par_iter().enumerate().for_each(|(i, cube)| {
+        cubes.into_par_iter().for_each(|cube| {
             let x: i32 = cube.position.x;
             let y: i32 = cube.position.y;
             let z: i32 = cube.position.z;
@@ -56,7 +53,7 @@ impl Chunk {
         (x as i32, z as i32, y as i32)
     }
 
-    fn generate_faces(cubes: &Vec<Cube>, pos: ChunkCoord3D) -> Vec<Quad> {
+    fn generate_faces(cubes: &Vec<Cube>) -> Vec<Quad> {
         let mut quads = Vec::new();
         for y in 0..CHUNK_HEIGHT {
             for z in 0..CHUNK_WIDTH {
@@ -208,10 +205,6 @@ pub struct ChunkMesh {
 
 impl ChunkMesh {
     pub fn new(graphics: &Graphics, data: ChunkMeshData) -> Self {
-        /*let now = SystemTime::now();
-        let time_then = now
-            .duration_since(UNIX_EPOCH)
-            .expect("Time went backwards!");*/
         let vertex_buffer = graphics
             .device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
@@ -236,12 +229,6 @@ impl ChunkMesh {
                 });
         let indices_len = quad::INDICES.len();
         let instances_len = data.instance_len;
-        /*let now = SystemTime::now();
-        let time_now = now
-            .duration_since(UNIX_EPOCH)
-            .expect("Time went backwards!");
-        let delta = time_now - time_then;
-        println!("Delta: {}", delta.as_millis());*/
         Self {
             vertex_buffer,
             index_buffer,

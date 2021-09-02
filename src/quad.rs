@@ -12,7 +12,7 @@ pub struct Quad {
 
 impl Quad {
     pub fn new(pos: Coord3D, facing: Rotation, texture_index: u32) -> Self {
-        let mut rotation: Rotation3<f32> = Rotation3::from_euler_angles(0., 0., 0.);
+        let rotation: Rotation3<f32>;
         match facing {
             Rotation::UP => {
                 let rot: f32 = -90.;

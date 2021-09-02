@@ -17,30 +17,29 @@ impl Graphics {
             let surface = instance.create_surface(window);
             (size, surface)
         };
-        let adapter = block_on(instance
-            .request_adapter(&wgpu::RequestAdapterOptions {
-                power_preference: wgpu::PowerPreference::HighPerformance,
-                compatible_surface: Some(&surface),
-            }))
-            .unwrap();
+        let adapter = block_on(instance.request_adapter(&wgpu::RequestAdapterOptions {
+            power_preference: wgpu::PowerPreference::HighPerformance,
+            compatible_surface: Some(&surface),
+        }))
+        .unwrap();
 
         let adapter_info = adapter.get_info();
         println!("Using {} ({:?})", adapter_info.name, adapter_info.backend);
 
-        let (device, queue) = block_on(adapter
-            .request_device(
-                &wgpu::DeviceDescriptor {
-                    label: Some("Device"),
-                    features: wgpu::Features::SAMPLED_TEXTURE_AND_STORAGE_BUFFER_ARRAY_NON_UNIFORM_INDEXING
+        let (device, queue) = block_on(adapter.request_device(
+            &wgpu::DeviceDescriptor {
+                label: Some("Device"),
+                features:
+                    wgpu::Features::SAMPLED_TEXTURE_AND_STORAGE_BUFFER_ARRAY_NON_UNIFORM_INDEXING
                         | wgpu::Features::TEXTURE_BINDING_ARRAY
                         | wgpu::Features::NON_FILL_POLYGON_MODE
                         | wgpu::Features::UNSIZED_BINDING_ARRAY
                         | wgpu::Features::SPIRV_SHADER_PASSTHROUGH,
-                    limits: adapter.limits(),
-                },
-                None,
-            ))
-            .unwrap();
+                limits: adapter.limits(),
+            },
+            None,
+        ))
+        .unwrap();
         let surface_config = wgpu::SurfaceConfiguration {
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
             format: surface.get_preferred_format(&adapter).unwrap(),
