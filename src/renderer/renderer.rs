@@ -32,12 +32,11 @@ impl Renderer {
             .create_command_encoder(&wgpu::CommandEncoderDescriptor {
                 label: Some("Main Command Encoder"),
             });
-        let frame = graphics
-            .surface
-            .get_current_frame()?
-            .output;
+        let frame = graphics.surface.get_current_frame()?.output;
         {
-            let view = frame.texture.create_view(&wgpu::TextureViewDescriptor::default());
+            let view = frame
+                .texture
+                .create_view(&wgpu::TextureViewDescriptor::default());
             let render_pass_builder = RenderPassBuilder::init(&view, &self.depth_texture_view);
             let desc = render_pass_builder.build();
             let mut pass = encoder.begin_render_pass(&desc);
@@ -99,7 +98,7 @@ impl<'a> RenderPassBuilder<'a> {
         wgpu::RenderPassDescriptor {
             label: Some("Main Render Pass"),
             color_attachments: &self.color_attachments,
-            depth_stencil_attachment: self.depth_attachment.clone()
+            depth_stencil_attachment: self.depth_attachment.clone(),
         }
     }
 }

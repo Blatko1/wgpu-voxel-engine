@@ -1,3 +1,5 @@
+use futures::executor::block_on;
+
 pub struct Graphics {
     pub size: winit::dpi::PhysicalSize<u32>,
     pub surface: wgpu::Surface,
@@ -7,19 +9,25 @@ pub struct Graphics {
 }
 
 impl Graphics {
-    pub async fn new(window: &winit::window::Window) -> Self {
-        let size = window.inner_size();
-        let backend = wgpu::util::backend_bits_from_env().unwrap_or(wgpu::Backends::VULKAN);
+    pub fn new(window: &winit::window::Window) -> Self {
+        let backend = wgpu::util::backend_bits_from_env().unwrap_or(wgpu::Backends::PRIMARY);
         let instance = wgpu::Instance::new(backend);
-        let surface = unsafe { instance.create_surface(window) };
-        let adapter = instance
+        let (size, surface) = unsafe {
+            let size = window.inner_size();
+            let surface = instance.create_surface(window);
+            (size, surface)
+        };
+        let adapter = block_on(instance
             .request_adapter(&wgpu::RequestAdapterOptions {
                 power_preference: wgpu::PowerPreference::HighPerformance,
                 compatible_surface: Some(&surface),
-            })
-            .await
+            }))
             .unwrap();
-        let (device, queue) = adapter
+
+        let adapter_info = adapter.get_info();
+        println!("Using {} ({:?})", adapter_info.name, adapter_info.backend);
+
+        let (device, queue) = block_on(adapter
             .request_device(
                 &wgpu::DeviceDescriptor {
                     label: Some("Device"),
@@ -31,8 +39,7 @@ impl Graphics {
                     limits: adapter.limits(),
                 },
                 None,
-            )
-            .await
+            ))
             .unwrap();
         let surface_config = wgpu::SurfaceConfiguration {
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
@@ -41,6 +48,7 @@ impl Graphics {
             height: size.height,
             present_mode: wgpu::PresentMode::Fifo,
         };
+
         surface.configure(&device, &surface_config);
         Self {
             size,

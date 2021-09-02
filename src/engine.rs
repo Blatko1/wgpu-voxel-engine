@@ -19,7 +19,7 @@ pub struct Engine {
     uniforms: UniformManager,
     camera: Camera,
     player: Player,
-    //debug_info: DebugInfo,
+    debug_info: DebugInfo,
 }
 
 impl Engine {
@@ -31,14 +31,15 @@ impl Engine {
         let chunk_gen = ChunkGenerator::new();
         unsafe { crate::texture::init_index_list() };
         let player = Player::new(&camera);
-        /*let debug_info = DebugInfoBuilder::new(
+        let debug_info = DebugInfoBuilder::new(
             10.,
             10.,
             20.,
             graphics.surface_config.format,
             (graphics.size.width, graphics.size.height),
         )
-        .build(&graphics).unwrap();*/
+        .build(&graphics)
+        .unwrap();
         Self {
             renderer,
             world,
@@ -46,7 +47,7 @@ impl Engine {
             uniforms,
             camera,
             player,
-            //debug_info,
+            debug_info,
         }
     }
 

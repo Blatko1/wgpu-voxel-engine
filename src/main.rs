@@ -32,7 +32,7 @@ struct Client {
 
 impl Client {
     fn new(window: &winit::window::Window) -> Self {
-        let graphics = block_on(Graphics::new(&window));
+        let graphics = Graphics::new(&window);
         let engine = Engine::new(&graphics);
         let pool = rayon::ThreadPoolBuilder::new()
             .num_threads(10)

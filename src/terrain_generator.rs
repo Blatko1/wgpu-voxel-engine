@@ -2,7 +2,6 @@ use bracket_noise::prelude::*;
 
 pub struct TerrainGenerator {
     noise: FastNoise,
-    seed: u64,
 }
 
 impl TerrainGenerator {
@@ -10,7 +9,7 @@ impl TerrainGenerator {
         let mut noise = FastNoise::new();
         noise.set_seed(seed);
         noise.set_frequency(0.05);
-        Self { noise, seed }
+        Self { noise }
     }
     pub fn perlin_3d(&self, x: i32, y: i32, z: i32) -> f32 {
         self.noise.get_noise3d(x as f32, y as f32, z as f32)
