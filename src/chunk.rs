@@ -1,12 +1,13 @@
 use crate::coordinate::{ChunkCoord3D, Coord3D};
-use crate::cube::Cube;
+use crate::cube::{Cube, CubeType};
+use crate::perlin_noise::{self, PerlinGenerator};
 use crate::quad::{self, Quad, Rotation};
 use crate::renderer::graphics::Graphics;
-use crate::terrain_generator::TerrainGenerator;
 use crate::uniform::{SetUniforms, UniformManager};
-use wgpu::util::DeviceExt;
+use rayon::iter::IndexedParallelIterator;
 use rayon::iter::IntoParallelIterator;
 use rayon::iter::ParallelIterator;
+use wgpu::util::DeviceExt;
 
 const CHUNK_LENGTH: usize = 32;
 const CHUNK_WIDTH: usize = 32;
@@ -22,7 +23,7 @@ impl Chunk {
     pub fn new(position: ChunkCoord3D) -> Self {
         let mut cubes = Vec::new();
         Chunk::empty_chunk(&mut cubes, position);
-        Chunk::generate_terrain(&mut cubes);
+        Chunk::generate_terrain(&mut cubes, position);
         let faces = Chunk::generate_faces(&mut cubes);
         Self {
             position,
@@ -31,14 +32,13 @@ impl Chunk {
         }
     }
 
-    fn generate_terrain(cubes: &mut Vec<Cube>) {
-        let noise = TerrainGenerator::new(1);
-        cubes.into_par_iter().for_each(|cube| {
+    fn generate_terrain(cubes: &mut Vec<Cube>, pos: ChunkCoord3D) {
+        let noise = perlin_noise::perlin_3d(pos);
+        cubes.into_par_iter().enumerate().for_each(|(i, cube)| {
             let x: i32 = cube.position.x;
             let y: i32 = cube.position.y;
             let z: i32 = cube.position.z;
-            let perlin = noise.perlin_3d(x, y, z);
-            if perlin > 0. {
+            if noise[i] > 0. {
                 cube.set_air(false);
             } else {
                 cube.set_air(true);
@@ -69,14 +69,14 @@ impl Chunk {
                             quads.push(Quad::new(
                                 Coord3D::new(pos_x, pos_y, pos_z),
                                 Rotation::LEFT,
-                                2,
+                                cubes[x + 32 * z + 32 * 32 * y].texture_index[0],
                             ));
                         }
                     } else {
                         quads.push(Quad::new(
                             Coord3D::new(pos_x, pos_y, pos_z),
                             Rotation::LEFT,
-                            2,
+                            cubes[x + 32 * z + 32 * 32 * y].texture_index[0],
                         ));
                     }
                     if x < 32 - 1 {
@@ -84,14 +84,14 @@ impl Chunk {
                             quads.push(Quad::new(
                                 Coord3D::new(pos_x, pos_y, pos_z),
                                 Rotation::RIGHT,
-                                2,
+                                cubes[x + 32 * z + 32 * 32 * y].texture_index[1],
                             ));
                         }
                     } else {
                         quads.push(Quad::new(
                             Coord3D::new(pos_x, pos_y, pos_z),
                             Rotation::RIGHT,
-                            2,
+                            cubes[x + 32 * z + 32 * 32 * y].texture_index[1],
                         ));
                     }
                     if z > 0 {
@@ -99,14 +99,14 @@ impl Chunk {
                             quads.push(Quad::new(
                                 Coord3D::new(pos_x, pos_y, pos_z),
                                 Rotation::BACK,
-                                2,
+                                cubes[x + 32 * z + 32 * 32 * y].texture_index[2],
                             ));
                         }
                     } else {
                         quads.push(Quad::new(
                             Coord3D::new(pos_x, pos_y, pos_z),
                             Rotation::BACK,
-                            2,
+                            cubes[x + 32 * z + 32 * 32 * y].texture_index[2],
                         ));
                     }
                     if z < 32 - 1 {
@@ -114,14 +114,14 @@ impl Chunk {
                             quads.push(Quad::new(
                                 Coord3D::new(pos_x, pos_y, pos_z),
                                 Rotation::FRONT,
-                                2,
+                                cubes[x + 32 * z + 32 * 32 * y].texture_index[3],
                             ));
                         }
                     } else {
                         quads.push(Quad::new(
                             Coord3D::new(pos_x, pos_y, pos_z),
                             Rotation::FRONT,
-                            2,
+                            cubes[x + 32 * z + 32 * 32 * y].texture_index[3],
                         ));
                     }
                     if y > 0 {
@@ -129,14 +129,14 @@ impl Chunk {
                             quads.push(Quad::new(
                                 Coord3D::new(pos_x, pos_y, pos_z),
                                 Rotation::DOWN,
-                                2,
+                                cubes[x + 32 * z + 32 * 32 * y].texture_index[5],
                             ));
                         }
                     } else {
                         quads.push(Quad::new(
                             Coord3D::new(pos_x, pos_y, pos_z),
                             Rotation::DOWN,
-                            2,
+                            cubes[x + 32 * z + 32 * 32 * y].texture_index[5],
                         ));
                     }
                     if y < 32 - 1 {
@@ -144,14 +144,14 @@ impl Chunk {
                             quads.push(Quad::new(
                                 Coord3D::new(pos_x, pos_y, pos_z),
                                 Rotation::UP,
-                                2,
+                                cubes[x + 32 * z + 32 * 32 * y].texture_index[4],
                             ));
                         }
                     } else {
                         quads.push(Quad::new(
                             Coord3D::new(pos_x, pos_y, pos_z),
                             Rotation::UP,
-                            2,
+                            cubes[x + 32 * z + 32 * 32 * y].texture_index[4],
                         ));
                     }
                 }
@@ -167,6 +167,7 @@ impl Chunk {
                     cubes.push(Cube::new(
                         Coord3D::new(x + pos.x * 32, y + pos.y * 32, z + pos.z * 32),
                         true,
+                        CubeType::DIRT,
                     ));
                 }
             }

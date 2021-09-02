@@ -49,7 +49,9 @@ impl Renderer {
         let view = frame
             .texture
             .create_view(&wgpu::TextureViewDescriptor::default());
-        debug_info.draw(&graphics, &mut encoder, &view, &camera).unwrap();
+        debug_info
+            .draw(&graphics, &mut encoder, &view, &camera)
+            .unwrap();
         debug_info.finish();
         graphics.queue.submit(Some(encoder.finish()));
 

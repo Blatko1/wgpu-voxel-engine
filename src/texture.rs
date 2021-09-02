@@ -11,7 +11,7 @@ pub struct Texture {
 }
 
 impl Texture {
-    pub const TEXTURE_ARRAY_SIZE: u32 = 3;
+    pub const TEXTURE_ARRAY_SIZE: u32 = 4;
 
     pub const DEPTH_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Depth32Float;
 
@@ -148,9 +148,11 @@ impl Texture {
 
         let mut textures = Vec::new();
         // Grass
-        textures.push(Self::from_path(&graphics, path.join("wolf.jpg"))?);
+        textures.push(Self::from_path(&graphics, path.join("grass_side.png"))?);
         textures.push(Self::from_path(&graphics, path.join("grass_bottom.png"))?);
         textures.push(Self::from_path(&graphics, path.join("grass_top.png"))?);
+        // Wolf
+        textures.push(Self::from_path(&graphics, path.join("wolf.jpg"))?);
 
         // Generate Mipmaps
         for t in textures.iter() {
@@ -237,4 +239,5 @@ pub static mut TEXTURE_INDEX_LIST: Vec<[u32; 6]> = Vec::new();
 
 pub unsafe fn init_index_list() {
     TEXTURE_INDEX_LIST.push([0, 0, 0, 0, 2, 1]);
+    TEXTURE_INDEX_LIST.push([0, 0, 0, 0, 0, 0]);
 }

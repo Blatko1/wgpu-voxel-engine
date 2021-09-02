@@ -15,7 +15,7 @@ pub struct World {
     pub meshes: HashMap<ChunkCoord3D, ChunkMesh>,
 }
 
-pub const RENDER_DISTANCE: i32 = 1;
+pub const RENDER_DISTANCE: i32 = 5;
 
 impl Renderable for World {
     fn render<'a>(

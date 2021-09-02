@@ -19,11 +19,9 @@ image = "0.23.14"
 rayon = "1.5.1"
 bracket-noise = "0.8.2"
 wgpu_glyph = "0.14.1"
+simdnoise = "3.1.6"
 
 [features]
 default = ["derive"]
 # spirv = ["wgpu/spirv"]
 derive = ["bytemuck/derive"]
-
-[build-dependencies]
-shaderc = "0.7.3"
