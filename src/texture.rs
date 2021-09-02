@@ -58,7 +58,7 @@ impl Texture {
         let texture = graphics.device.create_texture(&wgpu::TextureDescriptor {
             label,
             size,
-            mip_level_count: 1,
+            mip_level_count,
             sample_count: 1,
             dimension: wgpu::TextureDimension::D2,
             format: wgpu::TextureFormat::Rgba8UnormSrgb,
@@ -102,31 +102,32 @@ impl Texture {
 
     pub fn load_textures(graphics: &Graphics) -> Result<Vec<Texture>> {
         let path = std::path::Path::new(std::env::current_dir().unwrap().as_os_str()).join("res");
-        let shader_path =
-            std::path::Path::new(std::env::current_dir().unwrap().as_os_str()).join("src/shaders");
-        let vert_shader = Pipeline::load_shader(&graphics, shader_path.join("blit.vert.spv"));
-        let frag_shader = Pipeline::load_shader(&graphics, shader_path.join("blit.frag.spv"));
-        /*let mipmap_pipeline =
-            graphics.device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-                label: Some("blit"),
-                layout: None,
-                vertex: wgpu::VertexState {
-                    module: &vert_shader,
-                    entry_point: "main",
-                    buffers: &[],
-                },
-                fragment: Some(wgpu::FragmentState {
-                    module: &frag_shader,
-                    entry_point: "main",
-                    targets: &[wgpu::TextureFormat::Rgba8UnormSrgb.into()],
-                }),
-                primitive: wgpu::PrimitiveState {
-                    topology: wgpu::PrimitiveTopology::TriangleStrip,
-                    ..Default::default()
-                },
-                depth_stencil: None,
-                multisample: wgpu::MultisampleState::default(),
-            });
+
+        let blit_shader = graphics.device.create_shader_module(&wgpu::include_wgsl!("shaders/blit.wgsl"));
+        let mipmap_pipeline =
+            graphics
+                .device
+                .create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+                    label: Some("blit"),
+                    layout: None,
+                    vertex: wgpu::VertexState {
+                        module: &blit_shader,
+                        entry_point: "vs_main",
+                        buffers: &[],
+                    },
+                    fragment: Some(wgpu::FragmentState {
+                        module: &blit_shader,
+                        entry_point: "fs_main",
+                        targets: &[wgpu::TextureFormat::Rgba8UnormSrgb.into()],
+                    }),
+                    primitive: wgpu::PrimitiveState {
+                        topology: wgpu::PrimitiveTopology::TriangleStrip,
+                        ..Default::default()
+                    },
+                    depth_stencil: None,
+                    multisample: wgpu::MultisampleState::default(),
+                });
+        let bind_group_layout = mipmap_pipeline.get_bind_group_layout(0);
         let sampler = graphics.device.create_sampler(&wgpu::SamplerDescriptor {
             label: None,
             address_mode_u: wgpu::AddressMode::ClampToEdge,
@@ -143,17 +144,18 @@ impl Texture {
             .create_command_encoder(&wgpu::CommandEncoderDescriptor {
                 label: Some("mipmap command encoder"),
             });
-*/
+
         let mut textures = Vec::new();
         // Grass
         textures.push(Self::from_path(&graphics, path.join("wolf.jpg"))?);
         textures.push(Self::from_path(&graphics, path.join("grass_bottom.png"))?);
         textures.push(Self::from_path(&graphics, path.join("grass_top.png"))?);
 
-       /*for t in textures.iter() {
+        // Generate Mipmaps
+        for t in textures.iter() {
             t.generate_mipmaps(&graphics, &mipmap_pipeline, &sampler, &mut encoder);
         }
-        graphics.queue.submit(Some(encoder.finish()));*/
+        graphics.queue.submit(Some(encoder.finish()));
 
         Ok(textures)
     }

@@ -6,21 +6,21 @@ use wgpu::util::DeviceExt;
 
 pub struct UniformManager {
     global_matrix: GlobalMatrix,
-    //texture_array: SampledTextureArray,
+    texture_array: SampledTextureArray,
 }
 
 impl UniformManager {
     pub fn new(graphics: &Graphics, camera: &Camera) -> Self {
         let global_matrix = GlobalMatrix::new(&graphics, &camera);
-        /*let texture_array = SampledTextureArray::new(
+        let texture_array = SampledTextureArray::new(
             &graphics,
             Texture::load_textures(&graphics).unwrap(),
             Texture::create_sampler(&graphics),
-        );*/
+        );
 
         Self {
             global_matrix,
-            //texture_array,
+            texture_array,
         }
     }
 
@@ -31,7 +31,7 @@ impl UniformManager {
     pub fn bind_group_layouts(&self) -> Vec<&wgpu::BindGroupLayout> {
         let mut layouts = Vec::new();
         layouts.push(&self.global_matrix.bind_group_layout);
-        //layouts.push(&self.texture_array.bind_group_layout);
+        layouts.push(&self.texture_array.bind_group_layout);
         layouts
     }
 }
@@ -43,7 +43,7 @@ pub trait SetUniforms<'a> {
 impl<'a> SetUniforms<'a> for wgpu::RenderPass<'a> {
     fn set_bind_groups(&mut self, uniform: &'a UniformManager) {
         self.set_bind_group(0, &uniform.global_matrix.bind_group, &[]);
-        //self.set_bind_group(1, &uniform.texture_array.bind_group, &[]);
+        self.set_bind_group(1, &uniform.texture_array.bind_group, &[]);
     }
 }
 

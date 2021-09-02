@@ -8,11 +8,12 @@ Primary goal of this project is to make *procedural terrain generation* similar 
 >~~- Add mipmapping~~
 > 
 >~~- Add infinite chunk generation with multithreading optimisations~~
+> 
+>~~- Add noise terrain generation~~
 - Add debug menu
 - Add lightning
 - Add frustum culling
 - Divide chunks into bigger regions
-- Add noise terrain generation
 - Add some physics
 
 Old Project: **[wgpu-beginner-project](https://github.com/Blatko1/wgpu-beginner-project)**

@@ -28,8 +28,9 @@ impl DebugInfoBuilder {
     }
 
     pub fn build(&self, graphics: &Graphics) -> Result<DebugInfo, Box<dyn std::error::Error>> {
-        let font =
-            ab_glyph::FontArc::try_from_slice(include_bytes!("../res/fonts/Inconsolata_Expanded-Medium.ttf"))?;
+        let font = ab_glyph::FontArc::try_from_slice(include_bytes!(
+            "../res/fonts/Inconsolata_Expanded-Medium.ttf"
+        ))?;
         let brush = GlyphBrushBuilder::using_font(font).build(&graphics.device, self.render_format);
 
         let staging_belt = wgpu::util::StagingBelt::new(1024);

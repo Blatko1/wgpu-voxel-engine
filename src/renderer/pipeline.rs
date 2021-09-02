@@ -38,7 +38,7 @@ impl Pipeline {
                     front_face: wgpu::FrontFace::Ccw,
                     cull_mode: Some(wgpu::Face::Back),
                     clamp_depth: false,
-                    polygon_mode: wgpu::PolygonMode::Line,
+                    polygon_mode: wgpu::PolygonMode::Fill,
                     conservative: false,
                 },
                 depth_stencil: depth_format.map(|f| wgpu::DepthStencilState {
@@ -87,7 +87,7 @@ impl Pipeline {
             shader_dir.join("fragment.frag.spv"),
             vertex_buffer_layouts,
             Some(layout),
-            Some(Texture::DEPTH_FORMAT)
+            Some(Texture::DEPTH_FORMAT),
         )
     }
 
@@ -98,7 +98,7 @@ impl Pipeline {
             .device
             .create_shader_module_spirv(&wgpu::ShaderModuleDescriptorSpirV {
                 label: Some(&format!("{} shader", label)),
-                source: wgpu::util::make_spirv_raw(&fs::read(path).unwrap()),
+                source: wgpu::util::make_spirv_raw(&std::fs::read(path).unwrap()),
             }) }
     }
 }
