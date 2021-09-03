@@ -1,12 +1,12 @@
 use crate::coordinate::{ChunkCoord3D, Coord3D};
 use crate::cube::{Cube, CubeType};
-use crate::perlin_noise::{self, PerlinGenerator};
+use crate::perlin_noise;
 use crate::quad::{self, Quad, Rotation};
-use crate::renderer::graphics::Graphics;
 use crate::uniform::{SetUniforms, UniformManager};
 use rayon::iter::IndexedParallelIterator;
 use rayon::iter::IntoParallelIterator;
 use rayon::iter::ParallelIterator;
+use std::sync::Arc;
 use wgpu::util::DeviceExt;
 
 const CHUNK_LENGTH: usize = 32;
@@ -167,33 +167,16 @@ impl Chunk {
                     cubes.push(Cube::new(
                         Coord3D::new(x + pos.x * 32, y + pos.y * 32, z + pos.z * 32),
                         true,
-                        CubeType::DIRT,
+                        CubeType::GRASS,
                     ));
                 }
             }
         }
     }
 
-    pub fn generate_data(&self) -> ChunkMeshData {
-        let vertex_data = bytemuck::cast_slice(quad::VERTICES).to_vec();
-        let index_data = bytemuck::cast_slice(quad::INDICES).to_vec();
-        let instance_raw = self.faces.iter().map(Quad::to_raw).collect::<Vec<_>>();
-        let instance_data = bytemuck::cast_slice(&instance_raw).to_vec();
-        let instance_len = self.faces.len();
-        ChunkMeshData {
-            vertex_data,
-            index_data,
-            instance_data,
-            instance_len,
-        }
+    pub fn create_mesh(&self, device: Arc<wgpu::Device>) -> ChunkMesh {
+        ChunkMesh::new(&device, &self.faces)
     }
-}
-
-pub struct ChunkMeshData {
-    vertex_data: Vec<u8>,
-    index_data: Vec<u8>,
-    instance_data: Vec<u8>,
-    instance_len: usize,
 }
 
 pub struct ChunkMesh {
@@ -205,31 +188,25 @@ pub struct ChunkMesh {
 }
 
 impl ChunkMesh {
-    pub fn new(graphics: &Graphics, data: ChunkMeshData) -> Self {
-        let vertex_buffer = graphics
-            .device
-            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: None,
-                contents: data.vertex_data.as_slice(),
-                usage: wgpu::BufferUsages::VERTEX,
-            });
-        let index_buffer = graphics
-            .device
-            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: None,
-                contents: data.index_data.as_slice(),
-                usage: wgpu::BufferUsages::INDEX,
-            });
-        let instance_buffer =
-            graphics
-                .device
-                .create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                    label: None,
-                    contents: data.instance_data.as_slice(),
-                    usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
-                });
+    pub fn new(device: &wgpu::Device, faces: &Vec<Quad>) -> Self {
+        let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: None,
+            contents: bytemuck::cast_slice(quad::VERTICES),
+            usage: wgpu::BufferUsages::VERTEX,
+        });
+        let index_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: None,
+            contents: bytemuck::cast_slice(quad::INDICES),
+            usage: wgpu::BufferUsages::INDEX,
+        });
+        let instance_data = faces.iter().map(Quad::to_raw).collect::<Vec<_>>();
+        let instance_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: None,
+            contents: bytemuck::cast_slice(instance_data.as_slice()),
+            usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+        });
         let indices_len = quad::INDICES.len();
-        let instances_len = data.instance_len;
+        let instances_len = faces.len();
         Self {
             vertex_buffer,
             index_buffer,

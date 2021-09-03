@@ -4,7 +4,7 @@ use winit::window::WindowBuilder;
 
 mod camera;
 mod chunk;
-mod chunk_generator;
+mod chunk_loader;
 mod coordinate;
 mod cube;
 mod debug_info;
@@ -23,17 +23,16 @@ use engine::Engine;
 struct Client {
     graphics: Graphics,
     engine: Engine,
-    pool: rayon::ThreadPool,
+    pool: uvth::ThreadPool,
 }
 
 impl Client {
     fn new(window: &winit::window::Window) -> Self {
         let graphics = Graphics::new(&window);
         let engine = Engine::new(&graphics);
-        let pool = rayon::ThreadPoolBuilder::new()
-            .num_threads(10)
-            .build()
-            .unwrap();
+        let pool = uvth::ThreadPoolBuilder::new()
+            .name("Chunk Thread Pool".parse().unwrap())
+            .build();
         Self {
             graphics,
             engine,
@@ -69,7 +68,7 @@ fn main() {
         *control_flow = ControlFlow::Poll;
         match event {
             Event::WindowEvent { window_id, event } if window_id == window.id() => match event {
-                WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
+                WindowEvent::CloseRequested => quit(&mut client, control_flow),
                 WindowEvent::KeyboardInput {
                     input:
                         KeyboardInput {
@@ -79,7 +78,7 @@ fn main() {
                         },
                     ..
                 } => match virtual_keycode.unwrap() {
-                    VirtualKeyCode::Escape => *control_flow = ControlFlow::Exit,
+                    VirtualKeyCode::Escape => quit(&mut client, control_flow),
                     _ => (),
                 },
                 WindowEvent::MouseInput {
@@ -132,4 +131,9 @@ fn main() {
             _ => (),
         }
     })
+}
+
+fn quit(client: &mut Client, control_flow: &mut ControlFlow) {
+    client.pool.terminate();
+    *control_flow = ControlFlow::Exit;
 }

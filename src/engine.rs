@@ -1,5 +1,5 @@
 use crate::camera::Camera;
-use crate::chunk_generator::ChunkGenerator;
+use crate::chunk_loader::ChunkGenerator;
 use crate::debug_info::{DebugInfo, DebugInfoBuilder};
 use crate::player::Player;
 use crate::renderer::graphics::Graphics;
@@ -15,7 +15,10 @@ pub struct Engine {
     camera: Camera,
     player: Player,
     debug_info: DebugInfo,
+    tick_time: u32,
 }
+
+const TICK: u32 = 5;
 
 impl Engine {
     pub fn new(graphics: &Graphics) -> Self {
@@ -43,16 +46,24 @@ impl Engine {
             camera,
             player,
             debug_info,
+            tick_time: 0,
         }
     }
 
-    pub fn update(&mut self, graphics: &Graphics, pool: &rayon::ThreadPool) {
+    pub fn update(&mut self, graphics: &Graphics, pool: &uvth::ThreadPool) {
         self.camera.update();
         self.uniforms.update(&self.camera, &graphics);
         self.player.update(&self.camera);
-        self.world
-            .update(&self.chunk_gen, &mut self.player, &pool, &graphics);
         unsafe { self.debug_info.update_info() };
+
+        // Tick system:
+        self.tick_time += 1;
+        if TICK <= self.tick_time {
+            println!("tick!");
+            self.world
+                .update(&self.chunk_gen, &mut self.player, &pool, &graphics);
+            self.tick_time = 0;
+        }
     }
 
     pub fn render(&mut self, graphics: &Graphics) -> Result<(), wgpu::SurfaceError> {

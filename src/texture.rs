@@ -239,5 +239,5 @@ pub static mut TEXTURE_INDEX_LIST: Vec<[u32; 6]> = Vec::new();
 
 pub unsafe fn init_index_list() {
     TEXTURE_INDEX_LIST.push([0, 0, 0, 0, 2, 1]);
-    TEXTURE_INDEX_LIST.push([0, 0, 0, 0, 0, 0]);
+    TEXTURE_INDEX_LIST.push([1, 1, 1, 1, 1, 1]);
 }

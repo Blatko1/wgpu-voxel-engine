@@ -1,9 +1,10 @@
 use futures::executor::block_on;
+use std::sync::Arc;
 
 pub struct Graphics {
     pub size: winit::dpi::PhysicalSize<u32>,
     pub surface: wgpu::Surface,
-    pub device: wgpu::Device,
+    pub device: Arc<wgpu::Device>,
     pub queue: wgpu::Queue,
     pub surface_config: wgpu::SurfaceConfiguration,
 }
@@ -40,6 +41,7 @@ impl Graphics {
             None,
         ))
         .unwrap();
+
         let surface_config = wgpu::SurfaceConfiguration {
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
             format: surface.get_preferred_format(&adapter).unwrap(),
@@ -47,12 +49,12 @@ impl Graphics {
             height: size.height,
             present_mode: wgpu::PresentMode::Fifo,
         };
-
         surface.configure(&device, &surface_config);
+        let device_ref = Arc::new(device);
         Self {
             size,
             surface,
-            device,
+            device: device_ref,
             queue,
             surface_config,
         }
