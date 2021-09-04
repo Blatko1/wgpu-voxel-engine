@@ -1,6 +1,8 @@
 use crate::camera::Camera;
 use crate::chunk_loader::ChunkGenerator;
+use crate::coordinate::{ChunkCoord3D, Coord3D};
 use crate::debug_info::{DebugInfo, DebugInfoBuilder};
+use crate::frustum_culling::Frustum;
 use crate::player::Player;
 use crate::renderer::graphics::Graphics;
 use crate::renderer::renderer::Renderer;
@@ -16,9 +18,10 @@ pub struct Engine {
     player: Player,
     debug_info: DebugInfo,
     tick_time: u32,
+    frustum: Frustum,
 }
 
-const TICK: u32 = 5;
+const TICK: u32 = 3;
 
 impl Engine {
     pub fn new(graphics: &Graphics) -> Self {
@@ -38,6 +41,7 @@ impl Engine {
         )
         .build(&graphics)
         .unwrap();
+        let mut frustum = Frustum::new(&graphics, &uniforms, &camera);
         Self {
             renderer,
             world,
@@ -47,6 +51,7 @@ impl Engine {
             player,
             debug_info,
             tick_time: 0,
+            frustum,
         }
     }
 
@@ -59,17 +64,24 @@ impl Engine {
         // Tick system:
         self.tick_time += 1;
         if TICK <= self.tick_time {
-            println!("tick!");
-            self.world
-                .update(&self.chunk_gen, &mut self.player, &pool, &graphics);
+            /*self.world
+            .update(&self.chunk_gen, &mut self.player, &pool, &graphics);*/
             self.tick_time = 0;
         }
+        //self.frustum.update(&self.camera);
+        //self.frustum.check(Coord3D::new(0, 0, -32));
+    }
+
+    pub fn update_frustum(&mut self) {
+        self.frustum.update(&self.camera);
+        self.frustum.check(Coord3D::new(0, 0, -32), &self.camera);
     }
 
     pub fn render(&mut self, graphics: &Graphics) -> Result<(), wgpu::SurfaceError> {
         self.renderer.render(
             &graphics,
             &self.world,
+            &self.frustum.object,
             &self.uniforms,
             &mut self.debug_info,
             &self.camera,

@@ -10,11 +10,11 @@ pub struct Pipeline {
 }
 
 impl Pipeline {
-    fn new<P: AsRef<Path>>(
+    fn new(
         graphics: &Graphics,
         label: &str,
-        v_shader: P,
-        f_shader: P,
+        v_shader: &str,
+        f_shader: &str,
         vertex_layout: Vec<wgpu::VertexBufferLayout>,
         layout: Option<&wgpu::PipelineLayout>,
         depth_format: Option<wgpu::TextureFormat>,
@@ -66,8 +66,6 @@ impl Pipeline {
     }
 
     pub fn main_pipeline(graphics: &Graphics, uniform: &UniformManager) -> Pipeline {
-        let shader_dir =
-            std::path::Path::new(std::env::current_dir().unwrap().as_os_str()).join("src/shaders");
         let vertex_buffer_layouts = vec![
             Vertex::init_buffer_layout(),
             InstanceRaw::init_buffer_layout(),
@@ -82,23 +80,25 @@ impl Pipeline {
         Pipeline::new(
             &graphics,
             "main",
-            shader_dir.join("vertex.vert.spv"),
-            shader_dir.join("fragment.frag.spv"),
+            "vertex.vert.spv",
+            "fragment.frag.spv",
             vertex_buffer_layouts,
             Some(layout),
             Some(Texture::DEPTH_FORMAT),
         )
     }
 
-    pub fn load_shader<P: AsRef<Path>>(graphics: &Graphics, path: P) -> wgpu::ShaderModule {
-        let buf = path.as_ref().to_path_buf();
-        let label = buf.to_str().unwrap();
+    pub fn load_shader(graphics: &Graphics, path: &str) -> wgpu::ShaderModule {
+        let shader_dir =
+            std::path::Path::new(std::env::current_dir().unwrap().as_os_str()).join("src/shaders");
         unsafe {
             graphics
                 .device
                 .create_shader_module_spirv(&wgpu::ShaderModuleDescriptorSpirV {
-                    label: Some(&format!("{} shader", label)),
-                    source: wgpu::util::make_spirv_raw(&std::fs::read(path).unwrap()),
+                    label: Some(&format!("{} shader", path)),
+                    source: wgpu::util::make_spirv_raw(
+                        &std::fs::read(shader_dir.join(path)).unwrap(),
+                    ),
                 })
         }
     }

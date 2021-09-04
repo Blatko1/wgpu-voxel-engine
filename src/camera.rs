@@ -5,13 +5,14 @@ use winit::event::{DeviceEvent, KeyboardInput, MouseScrollDelta, VirtualKeyCode}
 
 pub struct Camera {
     pub eye: Point3<f32>,
-    target: Point3<f32>,
+    pub target: Point3<f32>,
     up: Vector3<f32>,
-    aspect: f32,
-    fov: f32,
+    pub aspect: f32,
+    pub fov: f32,
     near: f32,
     far: f32,
-    controller: CameraController,
+    pub controller: CameraController,
+    pub global_matrix: Matrix4<f32>
 }
 
 #[rustfmt::skip]
@@ -34,10 +35,11 @@ impl Camera {
             near: 0.01,
             far: 100.0,
             controller,
+            global_matrix: OPENGL_TO_WGPU_MATRIX
         }
     }
 
-    pub fn create_global_matrix(&self) -> MatrixData {
+    pub fn update_global_matrix(&mut self) {
         let target = Point3::new(
             self.eye.x + self.target.x,
             self.eye.y + self.target.y,
@@ -46,11 +48,7 @@ impl Camera {
         let projection =
             Matrix4::new_perspective(self.aspect, self.fov.to_degrees(), self.near, self.far);
         let view = Matrix4::look_at_rh(&self.eye, &target, &self.up);
-        let result: [[f32; 4]; 4] = (OPENGL_TO_WGPU_MATRIX * projection * view).into();
-        let data = MatrixData {
-            proj_view_model_matrix: result,
-        };
-        return data;
+        self.global_matrix = OPENGL_TO_WGPU_MATRIX * projection * view;
     }
 
     pub fn resize(&mut self, graphics: &Graphics) {
@@ -74,6 +72,7 @@ impl Camera {
         self.eye += Vector3::new(0.0, 1.0, 0.0)
             * self.controller.speed
             * (self.controller.up - self.controller.down);
+        self.update_global_matrix();
     }
 
     pub fn input(&mut self, event: &winit::event::DeviceEvent) {
@@ -81,7 +80,7 @@ impl Camera {
     }
 }
 
-struct CameraController {
+pub struct CameraController {
     speed: f32,
     sensitivity: f64,
     forward: f32,
@@ -90,8 +89,8 @@ struct CameraController {
     right: f32,
     up: f32,
     down: f32,
-    yaw: f32,
-    pitch: f32,
+    pub yaw: f32,
+    pub pitch: f32,
     fov_delta: f32,
 }
 

@@ -10,9 +10,10 @@ Primary goal of this project is to make *procedural terrain generation* similar 
 >~~- Add infinite chunk generation with multithreading optimisations~~
 > 
 >~~- Add noise terrain generation~~
+> 
+>~~- Add frustum culling~~
 - Add debug menu
 - Add lightning
-- Add frustum culling
 - Divide chunks into bigger regions
 - Add some physics
 

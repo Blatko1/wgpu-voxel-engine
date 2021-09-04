@@ -1,6 +1,6 @@
 use crate::chunk::{Chunk, ChunkMesh};
 use crate::chunk_loader::ChunkGenerator;
-use crate::coordinate::ChunkCoord3D;
+use crate::coordinate::{ChunkCoord3D, Coord3D};
 use crate::player::Player;
 use crate::renderer::graphics::Graphics;
 use crate::renderer::pipeline::Type;
@@ -18,8 +18,11 @@ pub struct World {
     pub load_queue: Vec<ChunkCoord3D>,
 }
 
-pub const RENDER_DISTANCE: i32 = 6;
+pub const RENDER_DISTANCE: i32 = 4;
 const MAX_LOADING_QUEUE_DATA: u32 = 1;
+
+pub const CHUNK_USIZE: usize = 32;
+pub const CHUNK_I32: i32 = 32;
 
 impl Renderable for World {
     fn render<'a>(
@@ -82,6 +85,8 @@ impl World {
                 && p.z < RENDER_DISTANCE + player.chunk.z
                 && p.x > -RENDER_DISTANCE + player.chunk.x
                 && p.z > -RENDER_DISTANCE + player.chunk.z
+                && p.y < RENDER_DISTANCE + player.chunk.y
+                && p.y > -RENDER_DISTANCE + player.chunk.y
             {
                 return true;
             }

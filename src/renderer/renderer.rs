@@ -2,6 +2,7 @@ use super::graphics::Graphics;
 use super::pipeline::{Pipeline, Type};
 use crate::camera::Camera;
 use crate::debug_info::DebugInfo;
+use crate::frustum_culling::FrustumObject;
 use crate::texture::Texture;
 use crate::uniform::UniformManager;
 use crate::world::World;
@@ -27,6 +28,7 @@ impl Renderer {
         &self,
         graphics: &Graphics,
         world: &World,
+        frustum: &FrustumObject,
         uniform: &UniformManager,
         debug_info: &mut DebugInfo,
         camera: &Camera,
@@ -41,10 +43,12 @@ impl Renderer {
             let view = frame
                 .texture
                 .create_view(&wgpu::TextureViewDescriptor::default());
-            let render_pass_builder = RenderPassBuilder::init(&view, &self.depth_texture_view);
+            let render_pass_builder =
+                RenderPassBuilder::init(&view, Some(&self.depth_texture_view));
             let desc = render_pass_builder.build();
             let mut pass = encoder.begin_render_pass(&desc);
             world.render(&mut pass, &self, &uniform);
+            frustum.render(&mut pass, &self, &uniform);
         }
         let view = frame
             .texture
@@ -78,7 +82,7 @@ struct RenderPassBuilder<'a> {
 }
 
 impl<'a> RenderPassBuilder<'a> {
-    fn init(frame: &'a wgpu::TextureView, depth_view: &'a wgpu::TextureView) -> Self {
+    fn init(frame: &'a wgpu::TextureView, depth_view: Option<&'a wgpu::TextureView>) -> Self {
         let color_attachments = vec![wgpu::RenderPassColorAttachment {
             view: frame,
             resolve_target: None,
@@ -93,8 +97,8 @@ impl<'a> RenderPassBuilder<'a> {
             },
         }];
 
-        let depth_attachment = Some(wgpu::RenderPassDepthStencilAttachment {
-            view: depth_view,
+        let depth_attachment = depth_view.map(|v| wgpu::RenderPassDepthStencilAttachment {
+            view: v,
             depth_ops: Some(wgpu::Operations {
                 load: wgpu::LoadOp::Clear(1.0),
                 store: true,

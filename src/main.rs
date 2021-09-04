@@ -9,6 +9,7 @@ mod coordinate;
 mod cube;
 mod debug_info;
 mod engine;
+mod frustum_culling;
 mod perlin_noise;
 mod player;
 mod quad;
@@ -90,6 +91,7 @@ fn main() {
                         focus = true;
                         window.set_cursor_visible(false);
                         window.set_cursor_grab(true).unwrap();
+                        client.engine.update_frustum();
                     }
                     MouseButton::Right => {
                         focus = false;

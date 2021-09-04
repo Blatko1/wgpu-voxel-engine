@@ -31,55 +31,143 @@ impl ChunkGenerator {
     pub fn load_chunk_queue(&self, world: &mut World, player: &mut Player) {
         if player.new_chunk_pos() {
             let chunk = player.chunk.clone();
-            for x in 0..world::RENDER_DISTANCE {
+            'outer: for x in 0..world::RENDER_DISTANCE {
                 for z in 0..world::RENDER_DISTANCE {
-                    if !world.global_chunks.contains(&ChunkCoord3D::new(
-                        x + chunk.x,
-                        0,
-                        z + chunk.z,
-                    )) {
-                        world
-                            .global_chunks
-                            .push(ChunkCoord3D::new(x + chunk.x, 0, z + chunk.z));
-                        world
-                            .load_queue
-                            .push(ChunkCoord3D::new(x + chunk.x, 0, z + chunk.z));
-                    }
-                    if !world.global_chunks.contains(&ChunkCoord3D::new(
-                        -x + chunk.x,
-                        0,
-                        z + chunk.z,
-                    )) {
-                        world
-                            .global_chunks
-                            .push(ChunkCoord3D::new(-x + chunk.x, 0, z + chunk.z));
-                        world
-                            .load_queue
-                            .push(ChunkCoord3D::new(-x + chunk.x, 0, z + chunk.z));
-                    }
-                    if !world.global_chunks.contains(&ChunkCoord3D::new(
-                        -x + chunk.x,
-                        0,
-                        -z + chunk.z,
-                    )) {
-                        world
-                            .global_chunks
-                            .push(ChunkCoord3D::new(-x + chunk.x, 0, -z + chunk.z));
-                        world
-                            .load_queue
-                            .push(ChunkCoord3D::new(-x + chunk.x, 0, -z + chunk.z));
-                    }
-                    if !world.global_chunks.contains(&ChunkCoord3D::new(
-                        x + chunk.x,
-                        0,
-                        -z + chunk.z,
-                    )) {
-                        world
-                            .global_chunks
-                            .push(ChunkCoord3D::new(x + chunk.x, 0, -z + chunk.z));
-                        world
-                            .load_queue
-                            .push(ChunkCoord3D::new(x + chunk.x, 0, -z + chunk.z));
+                    for y in 0..world::RENDER_DISTANCE {
+                        if !world.global_chunks.contains(&ChunkCoord3D::new(
+                            x + chunk.x,
+                            y + chunk.y,
+                            z + chunk.z,
+                        )) {
+                            world.global_chunks.push(ChunkCoord3D::new(
+                                x + chunk.x,
+                                y + chunk.y,
+                                z + chunk.z,
+                            ));
+                            world.load_queue.push(ChunkCoord3D::new(
+                                x + chunk.x,
+                                y + chunk.y,
+                                z + chunk.z,
+                            ));
+                        }
+                        if !world.global_chunks.contains(&ChunkCoord3D::new(
+                            -x + chunk.x,
+                            y + chunk.y,
+                            z + chunk.z,
+                        )) {
+                            world.global_chunks.push(ChunkCoord3D::new(
+                                -x + chunk.x,
+                                y + chunk.y,
+                                z + chunk.z,
+                            ));
+                            world.load_queue.push(ChunkCoord3D::new(
+                                -x + chunk.x,
+                                y + chunk.y,
+                                z + chunk.z,
+                            ));
+                        }
+                        if !world.global_chunks.contains(&ChunkCoord3D::new(
+                            -x + chunk.x,
+                            y + chunk.y,
+                            -z + chunk.z,
+                        )) {
+                            world.global_chunks.push(ChunkCoord3D::new(
+                                -x + chunk.x,
+                                y + chunk.y,
+                                -z + chunk.z,
+                            ));
+                            world.load_queue.push(ChunkCoord3D::new(
+                                -x + chunk.x,
+                                y + chunk.y,
+                                -z + chunk.z,
+                            ));
+                        }
+                        if !world.global_chunks.contains(&ChunkCoord3D::new(
+                            x + chunk.x,
+                            y + chunk.y,
+                            -z + chunk.z,
+                        )) {
+                            world.global_chunks.push(ChunkCoord3D::new(
+                                x + chunk.x,
+                                y + chunk.y,
+                                -z + chunk.z,
+                            ));
+                            world.load_queue.push(ChunkCoord3D::new(
+                                x + chunk.x,
+                                y + chunk.y,
+                                -z + chunk.z,
+                            ));
+                        }
+                        if !world.global_chunks.contains(&ChunkCoord3D::new(
+                            x + chunk.x,
+                            -y + chunk.y,
+                            z + chunk.z,
+                        )) {
+                            world.global_chunks.push(ChunkCoord3D::new(
+                                x + chunk.x,
+                                -y + chunk.y,
+                                z + chunk.z,
+                            ));
+                            world.load_queue.push(ChunkCoord3D::new(
+                                x + chunk.x,
+                                -y + chunk.y,
+                                z + chunk.z,
+                            ));
+                        }
+                        if !world.global_chunks.contains(&ChunkCoord3D::new(
+                            -x + chunk.x,
+                            -y + chunk.y,
+                            z + chunk.z,
+                        )) {
+                            world.global_chunks.push(ChunkCoord3D::new(
+                                -x + chunk.x,
+                                -y + chunk.y,
+                                z + chunk.z,
+                            ));
+                            world.load_queue.push(ChunkCoord3D::new(
+                                -x + chunk.x,
+                                -y + chunk.y,
+                                z + chunk.z,
+                            ));
+                        }
+                        if !world.global_chunks.contains(&ChunkCoord3D::new(
+                            -x + chunk.x,
+                            -y + chunk.y,
+                            -z + chunk.z,
+                        )) {
+                            world.global_chunks.push(ChunkCoord3D::new(
+                                -x + chunk.x,
+                                -y + chunk.y,
+                                -z + chunk.z,
+                            ));
+                            world.load_queue.push(ChunkCoord3D::new(
+                                -x + chunk.x,
+                                -y + chunk.y,
+                                -z + chunk.z,
+                            ));
+                        }
+                        if !world.global_chunks.contains(&ChunkCoord3D::new(
+                            x + chunk.x,
+                            -y + chunk.y,
+                            -z + chunk.z,
+                        )) {
+                            world.global_chunks.push(ChunkCoord3D::new(
+                                x + chunk.x,
+                                -y + chunk.y,
+                                -z + chunk.z,
+                            ));
+                            world.load_queue.push(ChunkCoord3D::new(
+                                x + chunk.x,
+                                -y + chunk.y,
+                                -z + chunk.z,
+                            ));
+                        }
+                        if player.new_chunk_pos() {
+                            if world.load_queue.len() > 15 {
+                                world.load_queue.clear();
+                            }
+                            break 'outer;
+                        }
                     }
                 }
             }
@@ -89,7 +177,6 @@ impl ChunkGenerator {
     pub fn update_world(&self, world: &mut World, player: &Player) {
         match self.receiver.try_recv() {
             Ok(r) => {
-                println!("Loaded new chunk at: x: {}, y: {}, z: {}", r.0.x, r.0.y, r.0.z);
                 world.chunks.insert(r.0, r.1);
                 world.meshes.insert(r.0, r.2);
                 world.remove_unseen_chunks(&player);

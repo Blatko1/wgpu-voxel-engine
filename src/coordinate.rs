@@ -19,3 +19,24 @@ impl Coord3D {
 }
 
 pub type ChunkCoord3D = Coord3D;
+
+impl ChunkCoord3D {
+    pub fn to_world_position(&self) -> Coord3D {
+        let x = self.x * 32;
+        let y = self.y * 32;
+        let z = self.z * 32;
+        Coord3D::new(x, y, z)
+    }
+}
+
+pub struct Coord3DF {
+    pub x: f32,
+    pub y: f32,
+    pub z: f32,
+}
+
+impl Coord3DF {
+    pub fn new(x: f32, y: f32, z: f32) -> Self {
+        Self { x, y, z }
+    }
+}
