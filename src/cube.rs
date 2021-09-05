@@ -1,4 +1,3 @@
-use crate::coordinate::Coord3D;
 use crate::texture;
 
 pub struct Cube {

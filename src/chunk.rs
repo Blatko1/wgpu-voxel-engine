@@ -1,4 +1,4 @@
-use crate::coordinate::{ChunkCoord3D, Coord3D};
+use crate::coordinate::{ChunkCoord3D, Coord3DI};
 use crate::cube::{Cube, CubeType};
 use crate::perlin_noise;
 use crate::quad::{self, Quad, Rotation};
@@ -57,25 +57,26 @@ impl Chunk {
 
     fn generate_faces(cubes: &Vec<Cube>, pos: ChunkCoord3D) -> Vec<Quad> {
         let mut quads = Vec::new();
+        let world_pos = pos.to_world_position_i32();
         for y in 0..CHUNK_HEIGHT {
             // Global pos
-            let pos_y = y as i32 + pos.y * CHUNK_I32;
+            let pos_y = y as i32 + world_pos.y;
             for z in 0..CHUNK_WIDTH {
                 // Global pos
-                let pos_z = z as i32 + pos.z * CHUNK_I32;
+                let pos_z = z as i32 + world_pos.z;
                 for x in 0..CHUNK_LENGTH {
                     let cube_pos = x + CHUNK_USIZE * z + CHUNK_USIZE * CHUNK_USIZE * y;
                     if cubes[cube_pos].is_air == true {
                         continue;
                     }
                     // Global pos
-                    let pos_x = x as i32 + pos.x * CHUNK_I32;
+                    let pos_x = x as i32 + world_pos.x;
                     if x > 0 {
                         if cubes[(x - 1) + CHUNK_USIZE * z + CHUNK_USIZE * CHUNK_USIZE * y].is_air
                             == true
                         {
                             quads.push(Quad::new(
-                                Coord3D::new(pos_x, pos_y, pos_z),
+                                Coord3DI::new(pos_x, pos_y, pos_z),
                                 Rotation::LEFT,
                                 cubes[cube_pos].texture_index[0],
                             ));
@@ -83,7 +84,7 @@ impl Chunk {
                     } else {
                         if perlin_noise::perlin_3d(pos_x - 1, pos_y, pos_z) > 0. {
                             quads.push(Quad::new(
-                                Coord3D::new(pos_x, pos_y, pos_z),
+                                Coord3DI::new(pos_x, pos_y, pos_z),
                                 Rotation::LEFT,
                                 cubes[cube_pos].texture_index[0],
                             ));
@@ -94,7 +95,7 @@ impl Chunk {
                             == true
                         {
                             quads.push(Quad::new(
-                                Coord3D::new(pos_x, pos_y, pos_z),
+                                Coord3DI::new(pos_x, pos_y, pos_z),
                                 Rotation::RIGHT,
                                 cubes[cube_pos].texture_index[1],
                             ));
@@ -102,7 +103,7 @@ impl Chunk {
                     } else {
                         if perlin_noise::perlin_3d(pos_x + 1, pos_y, pos_z) > 0. {
                             quads.push(Quad::new(
-                                Coord3D::new(pos_x, pos_y, pos_z),
+                                Coord3DI::new(pos_x, pos_y, pos_z),
                                 Rotation::RIGHT,
                                 cubes[cube_pos].texture_index[1],
                             ));
@@ -113,7 +114,7 @@ impl Chunk {
                             == true
                         {
                             quads.push(Quad::new(
-                                Coord3D::new(pos_x, pos_y, pos_z),
+                                Coord3DI::new(pos_x, pos_y, pos_z),
                                 Rotation::BACK,
                                 cubes[cube_pos].texture_index[2],
                             ));
@@ -121,7 +122,7 @@ impl Chunk {
                     } else {
                         if perlin_noise::perlin_3d(pos_x, pos_y, pos_z - 1) > 0. {
                             quads.push(Quad::new(
-                                Coord3D::new(pos_x, pos_y, pos_z),
+                                Coord3DI::new(pos_x, pos_y, pos_z),
                                 Rotation::BACK,
                                 cubes[cube_pos].texture_index[2],
                             ));
@@ -132,7 +133,7 @@ impl Chunk {
                             == true
                         {
                             quads.push(Quad::new(
-                                Coord3D::new(pos_x, pos_y, pos_z),
+                                Coord3DI::new(pos_x, pos_y, pos_z),
                                 Rotation::FRONT,
                                 cubes[cube_pos].texture_index[3],
                             ));
@@ -140,7 +141,7 @@ impl Chunk {
                     } else {
                         if perlin_noise::perlin_3d(pos_x, pos_y, pos_z + 1) > 0. {
                             quads.push(Quad::new(
-                                Coord3D::new(pos_x, pos_y, pos_z),
+                                Coord3DI::new(pos_x, pos_y, pos_z),
                                 Rotation::FRONT,
                                 cubes[cube_pos].texture_index[3],
                             ));
@@ -151,7 +152,7 @@ impl Chunk {
                             == true
                         {
                             quads.push(Quad::new(
-                                Coord3D::new(pos_x, pos_y, pos_z),
+                                Coord3DI::new(pos_x, pos_y, pos_z),
                                 Rotation::DOWN,
                                 cubes[cube_pos].texture_index[5],
                             ));
@@ -159,7 +160,7 @@ impl Chunk {
                     } else {
                         if perlin_noise::perlin_3d(pos_x, pos_y - 1, pos_z) > 0. {
                             quads.push(Quad::new(
-                                Coord3D::new(pos_x, pos_y, pos_z),
+                                Coord3DI::new(pos_x, pos_y, pos_z),
                                 Rotation::DOWN,
                                 cubes[cube_pos].texture_index[5],
                             ));
@@ -170,7 +171,7 @@ impl Chunk {
                             == true
                         {
                             quads.push(Quad::new(
-                                Coord3D::new(pos_x, pos_y, pos_z),
+                                Coord3DI::new(pos_x, pos_y, pos_z),
                                 Rotation::UP,
                                 cubes[cube_pos].texture_index[4],
                             ));
@@ -178,7 +179,7 @@ impl Chunk {
                     } else {
                         if perlin_noise::perlin_3d(pos_x, pos_y + 1, pos_z) > 0. {
                             quads.push(Quad::new(
-                                Coord3D::new(pos_x, pos_y, pos_z),
+                                Coord3DI::new(pos_x, pos_y, pos_z),
                                 Rotation::UP,
                                 cubes[cube_pos].texture_index[4],
                             ));

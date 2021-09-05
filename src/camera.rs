@@ -12,7 +12,7 @@ pub struct Camera {
     near: f32,
     far: f32,
     pub controller: CameraController,
-    pub global_matrix: Matrix4<f32>
+    pub global_matrix: Matrix4<f32>,
 }
 
 #[rustfmt::skip]
@@ -35,7 +35,7 @@ impl Camera {
             near: 0.01,
             far: 100.0,
             controller,
-            global_matrix: OPENGL_TO_WGPU_MATRIX
+            global_matrix: OPENGL_TO_WGPU_MATRIX,
         }
     }
 

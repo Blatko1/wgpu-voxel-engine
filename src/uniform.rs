@@ -5,8 +5,8 @@ use std::num::NonZeroU32;
 use wgpu::util::DeviceExt;
 
 pub struct UniformManager {
-    pub global_matrix: GlobalMatrix,
-    pub texture_array: SampledTextureArray,
+    global_matrix: GlobalMatrix,
+    texture_array: SampledTextureArray,
 }
 
 impl UniformManager {
@@ -47,8 +47,8 @@ impl<'a> SetUniforms<'a> for wgpu::RenderPass<'a> {
     }
 }
 
-pub struct Uniform<T> {
-    pub bind_group: wgpu::BindGroup,
+struct Uniform<T> {
+    bind_group: wgpu::BindGroup,
     bind_group_layout: wgpu::BindGroupLayout,
     buffer: Option<wgpu::Buffer>,
     data: T,
@@ -60,12 +60,14 @@ pub struct MatrixData {
     pub proj_view_model_matrix: [[f32; 4]; 4],
 }
 
-pub type GlobalMatrix = Uniform<MatrixData>;
+type GlobalMatrix = Uniform<MatrixData>;
 
 impl GlobalMatrix {
     pub fn new(graphics: &Graphics, camera: &Camera) -> Self {
         let proj_view_model_matrix: [[f32; 4]; 4] = camera.global_matrix.into();
-        let data = MatrixData { proj_view_model_matrix };
+        let data = MatrixData {
+            proj_view_model_matrix,
+        };
 
         let buffer = graphics
             .device
@@ -111,7 +113,9 @@ impl GlobalMatrix {
 
     fn update(&mut self, camera: &Camera, graphics: &Graphics) {
         let proj_view_model_matrix: [[f32; 4]; 4] = camera.global_matrix.into();
-        self.data = MatrixData { proj_view_model_matrix };
+        self.data = MatrixData {
+            proj_view_model_matrix,
+        };
         graphics.queue.write_buffer(
             &self.buffer.as_ref().unwrap(),
             0,

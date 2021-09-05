@@ -2,7 +2,7 @@ use super::graphics::Graphics;
 use super::pipeline::{Pipeline, Type};
 use crate::camera::Camera;
 use crate::debug_info::DebugInfo;
-use crate::frustum_culling::FrustumObject;
+use crate::frustum_culling::Frustum;
 use crate::texture::Texture;
 use crate::uniform::UniformManager;
 use crate::world::World;
@@ -28,10 +28,10 @@ impl Renderer {
         &self,
         graphics: &Graphics,
         world: &World,
-        frustum: &FrustumObject,
         uniform: &UniformManager,
         debug_info: &mut DebugInfo,
         camera: &Camera,
+        frustum: &Frustum,
     ) -> Result<(), wgpu::SurfaceError> {
         let mut encoder = graphics
             .device
@@ -47,8 +47,7 @@ impl Renderer {
                 RenderPassBuilder::init(&view, Some(&self.depth_texture_view));
             let desc = render_pass_builder.build();
             let mut pass = encoder.begin_render_pass(&desc);
-            world.render(&mut pass, &self, &uniform);
-            frustum.render(&mut pass, &self, &uniform);
+            world.render(&mut pass, &self, &uniform, &frustum);
         }
         let view = frame
             .texture
@@ -73,6 +72,7 @@ pub trait Renderable {
         pass: &mut wgpu::RenderPass<'a>,
         renderer: &'a Renderer,
         uniform: &'a UniformManager,
+        frustum: &'a Frustum,
     );
 }
 

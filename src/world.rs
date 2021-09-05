@@ -1,6 +1,7 @@
 use crate::chunk::{Chunk, ChunkMesh};
 use crate::chunk_loader::ChunkGenerator;
-use crate::coordinate::{ChunkCoord3D, Coord3D};
+use crate::coordinate::ChunkCoord3D;
+use crate::frustum_culling::Frustum;
 use crate::player::Player;
 use crate::renderer::graphics::Graphics;
 use crate::renderer::pipeline::Type;
@@ -18,7 +19,7 @@ pub struct World {
     pub load_queue: Vec<ChunkCoord3D>,
 }
 
-pub const RENDER_DISTANCE: i32 = 4;
+pub const RENDER_DISTANCE: i32 = 5;
 const MAX_LOADING_QUEUE_DATA: u32 = 1;
 
 pub const CHUNK_USIZE: usize = 32;
@@ -30,11 +31,14 @@ impl Renderable for World {
         pass: &mut RenderPass<'a>,
         renderer: &'a Renderer,
         uniform: &'a UniformManager,
+        frustum: &'a Frustum,
     ) {
         pass.set_pipeline(&renderer.pipelines.get(&Type::Main).unwrap().pipeline);
 
-        for (_, c) in self.meshes.iter() {
-            c.render(pass, &uniform);
+        for (p, c) in self.meshes.iter() {
+            if frustum.check(p) {
+                c.render(pass, &uniform);
+            }
         }
     }
 }

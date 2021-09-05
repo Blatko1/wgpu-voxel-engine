@@ -1,5 +1,5 @@
 use crate::camera::Camera;
-use crate::coordinate::Coord3D;
+use crate::coordinate::{ChunkCoord3D, Coord3DF};
 use crate::renderer::graphics::Graphics;
 use futures::task::SpawnExt;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
@@ -80,12 +80,7 @@ impl DebugInfo {
             "Position: x: {:.2}, y: {:.2}, z: {:.2}\n",
             camera.eye.x, camera.eye.y, camera.eye.z
         ));
-        let coords = Coord3D::new(
-            camera.eye.x.floor() as i32,
-            camera.eye.y.floor() as i32,
-            camera.eye.z.floor() as i32,
-        )
-        .to_chunk_coord();
+        let coords = Coord3DF::new(camera.eye.x, camera.eye.y, camera.eye.z).to_chunk_coord();
         let chunk = String::from(format!(
             "Chunk: x: {}, y: {}, z: {}",
             coords.x, coords.y, coords.z

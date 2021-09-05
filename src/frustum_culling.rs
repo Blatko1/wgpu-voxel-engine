@@ -1,5 +1,5 @@
 use crate::camera::Camera;
-use crate::coordinate::{ChunkCoord3D, Coord3D, Coord3DF};
+use crate::coordinate::{ChunkCoord3D, Coord3DF};
 use crate::renderer::graphics::Graphics;
 use crate::renderer::pipeline::Pipeline;
 use crate::renderer::renderer::{Renderable, Renderer};
@@ -13,37 +13,40 @@ use wgpu::RenderPass;
 pub struct Frustum {
     v_fov: f32,
     planes: Vec<Plane>,
-    pub object: FrustumObject,
 }
 
 impl Frustum {
-    pub fn new(
-        graphics: &Graphics,
-        uniform: &UniformManager,
-        camera: &Camera,
-    ) -> Self {
+    pub fn new(camera: &Camera) -> Self {
         let v_fov: f32 = 2. * ((camera.fov.to_radians() / 2.).tan() * camera.aspect).atan();
-        let object = FrustumObject::new(&graphics, uniform);
         let mat = camera.global_matrix;
         let planes = Frustum::matrix_to_planes(mat);
-        Self {
-            v_fov,
-            planes,
-            object,
-        }
+        Self { v_fov, planes }
     }
 
-    pub fn check(&mut self, pos: Coord3D, camera: &Camera) -> bool {
-        //self.normalize();
-        for i in 0..6 {
-            let dist = self.planes[i].a * pos.x as f32 + self.planes[i].b * pos.y as f32 + self.planes[i].c * pos.z as f32 + self.planes[i].d;
+    pub fn check(&self, pos: &ChunkCoord3D) -> bool {
+        let p1 = pos.to_world_position_f32();
+        let mut edges = Vec::new();
+        edges.push(p1);
+        edges.push(Coord3DF::new(p1.x + 32., p1.y, p1.z));
+        edges.push(Coord3DF::new(p1.x, p1.y, p1.z + 32.));
+        edges.push(Coord3DF::new(p1.x + 32., p1.y, p1.z + 32.));
+        edges.push(Coord3DF::new(p1.x, p1.y + 32., p1.z));
+        edges.push(Coord3DF::new(p1.x + 32., p1.y + 32., p1.z));
+        edges.push(Coord3DF::new(p1.x, p1.y + 32., p1.z + 32.));
+        edges.push(Coord3DF::new(p1.x + 32., p1.y + 32., p1.z + 32.));
+        'outer: for p in 0..8 {
+            for i in 0..6 {
+                let dist = self.planes[i].a * edges[p].x as f32
+                    + self.planes[i].b * edges[p].y as f32
+                    + self.planes[i].c * edges[p].z as f32
+                    + self.planes[i].d;
                 if dist < 0. {
-                println!("Out");
-                return false;
+                    continue 'outer;
+                }
+                return true;
             }
         }
-        println!("In!");
-        true
+        return false;
     }
 
     pub fn update(&mut self, camera: &Camera) {
@@ -110,150 +113,3 @@ impl Plane {
         }
     }
 }
-
-pub struct FrustumObject {
-    pipeline: wgpu::RenderPipeline,
-    vertex_buffer: wgpu::Buffer,
-    index_buffer: wgpu::Buffer,
-    indices_len: u32,
-}
-
-impl FrustumObject {
-    pub fn new(graphics: &Graphics, uniform: &UniformManager) -> Self {
-        let v_shader = Pipeline::load_shader(&graphics, "frustum.vert.spv");
-        let f_shader = Pipeline::load_shader(&graphics, "frustum.frag.spv");
-        let layout = graphics
-            .device
-            .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-                label: Some("Frustum pipeline layout"),
-                bind_group_layouts: &[uniform.bind_group_layouts()[0]],
-                push_constant_ranges: &[],
-            });
-        let pipeline = graphics
-            .device
-            .create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-                label: Some("Frustum pipeline"),
-                layout: Some(&layout),
-                vertex: wgpu::VertexState {
-                    module: &v_shader,
-                    entry_point: "main",
-                    buffers: &[Vertex::init_buffer_layout()],
-                },
-                primitive: wgpu::PrimitiveState {
-                    topology: wgpu::PrimitiveTopology::LineList,
-                    strip_index_format: None,
-                    front_face: wgpu::FrontFace::Ccw,
-                    cull_mode: Some(wgpu::Face::Back),
-                    clamp_depth: false,
-                    polygon_mode: wgpu::PolygonMode::Fill,
-                    conservative: false,
-                },
-                depth_stencil: Some(wgpu::DepthStencilState {
-                    format: Texture::DEPTH_FORMAT,
-                    depth_write_enabled: true,
-                    depth_compare: wgpu::CompareFunction::Less,
-                    stencil: wgpu::StencilState::default(),
-                    bias: wgpu::DepthBiasState::default(),
-                }),
-                multisample: wgpu::MultisampleState {
-                    count: 1,
-                    mask: !0,
-                    alpha_to_coverage_enabled: false,
-                },
-                fragment: Some(wgpu::FragmentState {
-                    module: &f_shader,
-                    entry_point: "main",
-                    targets: &[wgpu::ColorTargetState {
-                        format: graphics.surface_config.format,
-                        blend: Some(wgpu::BlendState::REPLACE),
-                        write_mask: wgpu::ColorWrites::ALL,
-                    }],
-                }),
-            });
-        let vertex_buffer = graphics
-            .device
-            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: Some("frustum vertex buffer"),
-                contents: bytemuck::cast_slice(VERTICES),
-                usage: wgpu::BufferUsages::VERTEX,
-            });
-        let index_buffer = graphics
-            .device
-            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: Some("frustum index buffer"),
-                contents: bytemuck::cast_slice(INDICES),
-                usage: wgpu::BufferUsages::INDEX,
-            });
-        let indices_len = INDICES.len() as u32;
-
-        Self {
-            pipeline,
-            vertex_buffer,
-            index_buffer,
-            indices_len,
-        }
-    }
-}
-
-impl Renderable for FrustumObject {
-    fn render<'a>(
-        &'a self,
-        pass: &mut RenderPass<'a>,
-        renderer: &'a Renderer,
-        uniform: &'a UniformManager,
-    ) {
-        pass.set_pipeline(&self.pipeline);
-        pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
-        pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint32);
-        pass.set_bind_group(0, &uniform.global_matrix.bind_group, &[]);
-
-        pass.draw_indexed(0..self.indices_len, 0, 0..1);
-    }
-}
-
-const VERTICES: &[Vertex] = &[
-    Vertex {
-        position: [-1., -1., 0.],
-        tex_coords: [0., 0.],
-    },
-    Vertex {
-        position: [1., -1., 0.],
-        tex_coords: [0., 0.],
-    },
-    Vertex {
-        position: [-1., 1., 0.],
-        tex_coords: [0., 0.],
-    },
-    Vertex {
-        position: [1., 1., 0.],
-        tex_coords: [0., 0.],
-    },
-    Vertex {
-        position: [-50., -40., -50.],
-        tex_coords: [0., 0.],
-    },
-    Vertex {
-        position: [50., -40., -50.],
-        tex_coords: [0., 0.],
-    },
-    Vertex {
-        position: [-50., 40., -50.],
-        tex_coords: [0., 0.],
-    },
-    Vertex {
-        position: [50., 40., -50.],
-        tex_coords: [0., 0.],
-    },
-    Vertex {
-        position: [0., 0., -30.],
-        tex_coords: [0., 0.],
-    },
-    Vertex {
-        position: [0., 0., -35.],
-        tex_coords: [0., 0.],
-    },
-];
-
-const INDICES: &[u32] = &[
-    0, 1, 1, 3, 3, 2, 2, 0, 0, 4, 1, 5, 2, 6, 3, 7, 4, 5, 5, 7, 7, 6, 6, 4, 8, 9
-];
