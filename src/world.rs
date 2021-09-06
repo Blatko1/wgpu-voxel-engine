@@ -8,19 +8,21 @@ use crate::renderer::pipeline::Type;
 use crate::renderer::renderer::{Renderable, Renderer};
 use crate::uniform::UniformManager;
 use hashbrown::HashMap;
+use std::sync::Arc;
 use wgpu::RenderPass;
 
 pub struct World {
     pub global_chunks: Vec<ChunkCoord3D>,
-    pub chunks: HashMap<ChunkCoord3D, Chunk>,
+    pub chunks: HashMap<ChunkCoord3D, Arc<Chunk>>,
     pub meshes: HashMap<ChunkCoord3D, ChunkMesh>,
 
     //Chunk Loading Queue
-    pub load_queue: Vec<ChunkCoord3D>,
+    pub data_load_queue: Vec<ChunkCoord3D>,
+    pub mesh_load_queue: Vec<ChunkCoord3D>,
 }
 
 pub const RENDER_DISTANCE: i32 = 5;
-const MAX_LOADING_QUEUE_DATA: u32 = 1;
+const MAX_LOADING_QUEUE_DATA: u32 = 2;
 
 pub const CHUNK_USIZE: usize = 32;
 pub const CHUNK_I32: i32 = 32;
@@ -48,12 +50,14 @@ impl World {
         let global_chunks = Vec::new();
         let chunks = HashMap::new();
         let meshes = HashMap::new();
-        let load_queue = Vec::new();
+        let data_load_queue = Vec::new();
+        let mesh_load_queue = Vec::new();
         Self {
             global_chunks,
             chunks,
             meshes,
-            load_queue,
+            data_load_queue,
+            mesh_load_queue,
         }
     }
 
@@ -64,24 +68,54 @@ impl World {
         pool: &uvth::ThreadPool,
         graphics: &Graphics,
     ) {
+        // Check if chunks within render distance need loading
         chunk_gen.load_chunk_queue(self, player);
-        self.process_loading_queue(&chunk_gen, &graphics, &pool);
+        // Load chunks in queue.
+        self.process_loading_queue(&chunk_gen, &pool);
+        // Check if any chunks need mesh loading
+        self.generate_meshes(&graphics, &chunk_gen, &pool);
         chunk_gen.update_world(self, &player);
     }
 
-    fn process_loading_queue(
+    fn process_loading_queue(&mut self, chunk_gen: &ChunkGenerator, pool: &uvth::ThreadPool) {
+        for _ in 0..MAX_LOADING_QUEUE_DATA {
+            if self.data_load_queue.len() > 0 {
+                chunk_gen.generate_chunk_data(self.data_load_queue[0], &pool);
+                self.data_load_queue.remove(0);
+            }
+        }
+    }
+
+    fn generate_meshes(
         &mut self,
-        chunk_gen: &ChunkGenerator,
         graphics: &Graphics,
+        chunk_gen: &ChunkGenerator,
         pool: &uvth::ThreadPool,
     ) {
-        if self.load_queue.len() > 0 {
-            chunk_gen.generate_chunk(&graphics, self.load_queue[0], &pool);
-            self.load_queue.remove(0);
+        if self.mesh_load_queue.len() > 0 {
+            chunk_gen.generate_mesh(&graphics, self, self.mesh_load_queue[0], &pool);
         }
     }
 
     pub fn remove_unseen_chunks(&mut self, player: &Player) {
+        let meshes = &mut self.meshes;
+        let global_chunks = &mut self.global_chunks;
+        self.chunks.retain(|p, _| {
+            if p.x < RENDER_DISTANCE + player.chunk.x
+                && p.z < RENDER_DISTANCE + player.chunk.z
+                && p.x > -RENDER_DISTANCE + player.chunk.x
+                && p.z > -RENDER_DISTANCE + player.chunk.z
+                && p.y < RENDER_DISTANCE + player.chunk.y
+                && p.y > -RENDER_DISTANCE + player.chunk.y
+            {
+                return true;
+            }
+            meshes.remove(p);
+            return false;
+        });
+    }
+
+    pub fn remove_all_unseen_chunks(&mut self, player: &Player) {
         let meshes = &mut self.meshes;
         let global_chunks = &mut self.global_chunks;
         self.chunks.retain(|p, _| {

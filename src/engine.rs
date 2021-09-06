@@ -21,7 +21,7 @@ pub struct Engine {
     frustum: Frustum,
 }
 
-const TICK: u32 = 3;
+const TICK: u32 = 5;
 
 impl Engine {
     pub fn new(graphics: &Graphics) -> Self {
@@ -60,6 +60,7 @@ impl Engine {
         self.uniforms.update(&self.camera, &graphics);
         self.player.update(&self.camera);
         unsafe { self.debug_info.update_info() };
+        self.frustum.update(&self.camera);
 
         // Tick system:
         self.tick_time += 1;
@@ -68,12 +69,6 @@ impl Engine {
                 .update(&self.chunk_gen, &mut self.player, &pool, &graphics);
             self.tick_time = 0;
         }
-        self.frustum.update(&self.camera);
-    }
-
-    pub fn update_frustum(&mut self) {
-        //self.frustum.update(&self.camera);            // Remove comment sign from this line to test out frustum culling.
-                                                        //
     }
 
     pub fn render(&mut self, graphics: &Graphics) -> Result<(), wgpu::SurfaceError> {

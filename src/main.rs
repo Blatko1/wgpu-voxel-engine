@@ -91,7 +91,6 @@ fn main() {
                         focus = true;
                         window.set_cursor_visible(false);
                         window.set_cursor_grab(true).unwrap();
-                        client.engine.update_frustum();
                     }
                     MouseButton::Right => {
                         focus = false;
