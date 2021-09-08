@@ -15,6 +15,7 @@ const CHUNK_LENGTH: usize = CHUNK_USIZE;
 const CHUNK_WIDTH: usize = CHUNK_USIZE;
 const CHUNK_HEIGHT: usize = CHUNK_USIZE;
 
+#[derive(Debug)]
 pub struct Chunk {
     position: ChunkCoord3D,
     cubes: Vec<Cube>,
@@ -74,7 +75,7 @@ impl Chunk {
                         }
                     } else {
                         if adjacent_chunks[0].cubes
-                            [16 + CHUNK_USIZE * z + CHUNK_USIZE * CHUNK_USIZE * y]
+                            [(CHUNK_USIZE - 1) + CHUNK_USIZE * z + CHUNK_USIZE * CHUNK_USIZE * y]
                             .cube_type
                             == CubeType::AIR
                         {
@@ -122,7 +123,7 @@ impl Chunk {
                         }
                     } else {
                         if adjacent_chunks[2].cubes
-                            [x + CHUNK_USIZE * 16 + CHUNK_USIZE * CHUNK_USIZE * y]
+                            [x + CHUNK_USIZE * (CHUNK_USIZE - 1) + CHUNK_USIZE * CHUNK_USIZE * y]
                             .cube_type
                             == CubeType::AIR
                         {

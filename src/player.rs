@@ -13,14 +13,16 @@ impl Player {
         Self { pos, chunk }
     }
 
-    pub fn update(&mut self, camera: &Camera) {
+    pub fn update_pos(&mut self, camera: &Camera) {
         self.pos = Coord3DF::new(camera.eye.x, camera.eye.y, camera.eye.z);
     }
 
-    pub fn new_chunk_pos(&mut self) -> bool {
-        let result = self.chunk != self.pos.to_chunk_coord();
-
+    pub fn update_chunk_pos(&mut self) {
         self.chunk = self.pos.to_chunk_coord();
+    }
+
+    pub fn is_in_new_chunk_pos(&self) -> bool {
+        let result = self.chunk != self.pos.to_chunk_coord();
         result
     }
 }

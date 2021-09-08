@@ -11,72 +11,55 @@ pub struct ChunkGenerator {
     data_receiver: Receiver<(ChunkCoord3D, Arc<Chunk>)>,
     mesh_sender: Sender<(ChunkCoord3D, ChunkMesh)>,
     mesh_receiver: Receiver<(ChunkCoord3D, ChunkMesh)>,
+
+    data_in_process: Vec<ChunkCoord3D>,
+    mesh_in_process: Vec<ChunkCoord3D>,
 }
 
 impl ChunkGenerator {
     pub fn new() -> Self {
         let (data_sender, data_receiver) = flume::unbounded();
         let (mesh_sender, mesh_receiver) = flume::unbounded();
+        let data_in_process = Vec::new();
+        let mesh_in_process = Vec::new();
         Self {
             data_sender,
             data_receiver,
             mesh_sender,
             mesh_receiver,
+            data_in_process,
+            mesh_in_process,
         }
     }
 
     pub fn generate_mesh(
-        &self,
+        &mut self,
         graphics: &Graphics,
         world: &mut World,
         pos: ChunkCoord3D,
         pool: &uvth::ThreadPool,
     ) {
         let is_between_chunks = ChunkGenerator::check_adjacent_chunks(pos, &world);
-        if is_between_chunks {
+        if let Some(chunks) = is_between_chunks {
             let c = world.chunks.get(&pos).unwrap().clone();
             let sender = self.mesh_sender.clone();
             let device = Arc::clone(&graphics.device);
-            let mut adjacent_chunks = Vec::new();
-            adjacent_chunks.push(
-                world
-                    .chunks
-                    .get(&ChunkCoord3D::new(pos.x - 1, pos.y, pos.z))
-                    .unwrap()
-                    .clone(),
-            );
-            adjacent_chunks.push(
-                world
-                    .chunks
-                    .get(&ChunkCoord3D::new(pos.x + 1, pos.y, pos.z))
-                    .unwrap()
-                    .clone(),
-            );
-            adjacent_chunks.push(
-                world
-                    .chunks
-                    .get(&ChunkCoord3D::new(pos.x, pos.y, pos.z - 1))
-                    .unwrap()
-                    .clone(),
-            );
-            adjacent_chunks.push(
-                world
-                    .chunks
-                    .get(&ChunkCoord3D::new(pos.x, pos.y, pos.z + 1))
-                    .unwrap()
-                    .clone(),
-            );
+            world.mesh_load_queue.remove(0);
+            self.mesh_in_process.push(pos);
             pool.execute(move || {
-                let mesh = c.create_mesh(device.clone(), adjacent_chunks);
+                let mesh = c.create_mesh(device.clone(), chunks);
                 let data = (pos, mesh);
                 sender.send(data).unwrap();
             });
-            world.mesh_load_queue.remove(0);
+        } else {
+            let e = world.mesh_load_queue.remove(0);
+            world.mesh_load_queue.push(e);
         }
     }
 
-    pub fn generate_chunk_data(&self, pos: ChunkCoord3D, pool: &uvth::ThreadPool) {
+    pub fn generate_chunk_data(&mut self, pos: ChunkCoord3D, pool: &uvth::ThreadPool) {
         let sender = self.data_sender.clone();
+        self.data_in_process.push(pos);
         pool.execute(move || {
             let chunk = Arc::new(Chunk::new(pos));
             let data = (pos, chunk);
@@ -84,136 +67,138 @@ impl ChunkGenerator {
         });
     }
 
-    fn check_adjacent_chunks(pos: ChunkCoord3D, world: &World) -> bool {
+    fn check_adjacent_chunks(pos: ChunkCoord3D, world: &World) -> Option<Vec<Arc<Chunk>>> {
+        let mut adjacent_chunks = Vec::new();
         if !world.chunks.contains_key(&pos) {
-            return false;
+            return None;
         }
         if !world
             .chunks
             .contains_key(&ChunkCoord3D::new(pos.x - 1, pos.y, pos.z))
         {
-            return false;
+            return None;
         }
         if !world
             .chunks
             .contains_key(&ChunkCoord3D::new(pos.x + 1, pos.y, pos.z))
         {
-            return false;
+            return None;
         }
         if !world
             .chunks
             .contains_key(&ChunkCoord3D::new(pos.x, pos.y, pos.z - 1))
         {
-            return false;
+            return None;
         }
         if !world
             .chunks
             .contains_key(&ChunkCoord3D::new(pos.x, pos.y, pos.z + 1))
         {
-            return false;
+            return None;
         }
-        true
+        adjacent_chunks.push(
+            world
+                .chunks
+                .get(&ChunkCoord3D::new(pos.x - 1, pos.y, pos.z))
+                .unwrap()
+                .clone(),
+        );
+        adjacent_chunks.push(
+            world
+                .chunks
+                .get(&ChunkCoord3D::new(pos.x + 1, pos.y, pos.z))
+                .unwrap()
+                .clone(),
+        );
+        adjacent_chunks.push(
+            world
+                .chunks
+                .get(&ChunkCoord3D::new(pos.x, pos.y, pos.z - 1))
+                .unwrap()
+                .clone(),
+        );
+        adjacent_chunks.push(
+            world
+                .chunks
+                .get(&ChunkCoord3D::new(pos.x, pos.y, pos.z + 1))
+                .unwrap()
+                .clone(),
+        );
+        Some(adjacent_chunks)
     }
 
     pub fn load_chunk_queue(&self, world: &mut World, player: &mut Player) {
-        if player.new_chunk_pos() {
+        if player.is_in_new_chunk_pos() {
+            player.update_chunk_pos();
+            world.data_load_queue.clear();
+            world.mesh_load_queue.clear();
             let chunk = player.chunk.clone();
-            'outer: for x in 0..world::RENDER_DISTANCE {
-                for z in 0..world::RENDER_DISTANCE {
-                    if !world.global_chunks.contains(&ChunkCoord3D::new(
-                        x + chunk.x,
-                        0,
-                        z + chunk.z,
-                    )) {
-                        world
-                            .global_chunks
-                            .push(ChunkCoord3D::new(x + chunk.x, 0, z + chunk.z));
-                        world
-                            .data_load_queue
-                            .push(ChunkCoord3D::new(x + chunk.x, 0, z + chunk.z));
-                        world
-                            .mesh_load_queue
-                            .push(ChunkCoord3D::new(x + chunk.x, 0, z + chunk.z));
-                    }
-                    if !world.global_chunks.contains(&ChunkCoord3D::new(
-                        -x + chunk.x,
-                        0,
-                        z + chunk.z,
-                    )) {
-                        world
-                            .global_chunks
-                            .push(ChunkCoord3D::new(-x + chunk.x, 0, z + chunk.z));
-                        world
-                            .data_load_queue
-                            .push(ChunkCoord3D::new(-x + chunk.x, 0, z + chunk.z));
-                        world
-                            .mesh_load_queue
-                            .push(ChunkCoord3D::new(-x + chunk.x, 0, z + chunk.z));
-                    }
-                    if !world.global_chunks.contains(&ChunkCoord3D::new(
-                        -x + chunk.x,
-                        0,
-                        -z + chunk.z,
-                    )) {
-                        world
-                            .global_chunks
-                            .push(ChunkCoord3D::new(-x + chunk.x, 0, -z + chunk.z));
-                        world.data_load_queue.push(ChunkCoord3D::new(
-                            -x + chunk.x,
-                            0,
-                            -z + chunk.z,
-                        ));
-                        world.mesh_load_queue.push(ChunkCoord3D::new(
-                            -x + chunk.x,
-                            0,
-                            -z + chunk.z,
-                        ));
-                    }
-                    if !world.global_chunks.contains(&ChunkCoord3D::new(
-                        x + chunk.x,
-                        0,
-                        -z + chunk.z,
-                    )) {
-                        world
-                            .global_chunks
-                            .push(ChunkCoord3D::new(x + chunk.x, 0, -z + chunk.z));
-                        world
-                            .data_load_queue
-                            .push(ChunkCoord3D::new(x + chunk.x, 0, -z + chunk.z));
-                        world
-                            .mesh_load_queue
-                            .push(ChunkCoord3D::new(x + chunk.x, 0, -z + chunk.z));
-                    }
-                    if player.new_chunk_pos() {
-                        world.data_load_queue.clear();
-                        break 'outer;
+            for x in -5..world::RENDER_DISTANCE + 1 {
+                for z in -5..world::RENDER_DISTANCE + 1 {
+                    self.enqueue_chunk_data(world, x, 0, z, chunk);
+                    self.enqueue_chunk_mesh(world, x, 0, z, chunk);
+                    if player.is_in_new_chunk_pos() {
+                        return;
                     }
                 }
+                self.enqueue_chunk_data(world, x, 0, world::RENDER_DISTANCE + 1, chunk);
+                self.enqueue_chunk_data(world, x, 0, -world::RENDER_DISTANCE - 1, chunk);
+            }
+            for z in -5..world::RENDER_DISTANCE + 1 {
+                self.enqueue_chunk_data(world, world::RENDER_DISTANCE + 1, 0, z, chunk);
+                self.enqueue_chunk_data(world, -world::RENDER_DISTANCE - 1, 0, z, chunk);
             }
         }
-        //world.remove_unseen_chunks(&player);
     }
 
-    pub fn update_world(&self, world: &mut World, player: &Player) {
+    fn enqueue_chunk_data(&self, world: &mut World, x: i32, y: i32, z: i32, chunk: ChunkCoord3D) {
+        if !world
+            .chunks
+            .contains_key(&ChunkCoord3D::new(x + chunk.x, 0, z + chunk.z))
+            && !self
+                .data_in_process
+                .contains(&ChunkCoord3D::new(x + chunk.x, 0, z + chunk.z))
+        {
+            world
+                .data_load_queue
+                .push(ChunkCoord3D::new(x + chunk.x, 0, z + chunk.z));
+        }
+    }
+
+    fn enqueue_chunk_mesh(&self, world: &mut World, x: i32, y: i32, z: i32, chunk: ChunkCoord3D) {
+        if !world
+            .meshes
+            .contains_key(&ChunkCoord3D::new(x + chunk.x, 0, z + chunk.z))
+            && !self
+                .mesh_in_process
+                .contains(&ChunkCoord3D::new(x + chunk.x, 0, z + chunk.z))
+        {
+            world
+                .mesh_load_queue
+                .push(ChunkCoord3D::new(x + chunk.x, 0, z + chunk.z));
+        }
+    }
+
+    pub fn update_world(&mut self, world: &mut World) {
         match self.data_receiver.try_recv() {
-            Ok(r) => {
+            Ok((pos, data)) => {
                 println!(
                     "Loaded chunk data at: x: {}, y: {}, z: {}",
-                    r.0.x, r.0.y, r.0.z
+                    pos.x, pos.y, pos.z
                 );
-                world.chunks.insert(r.0, r.1);
-                //world.remove_all_unseen_chunks(&player);
+                world.chunks.insert(pos, data);
+                self.data_in_process.retain(|&p| p != pos);
             }
             Err(_) => {}
         }
         match self.mesh_receiver.try_recv() {
-            Ok(r) => {
+            Ok((pos, mesh)) => {
                 println!(
                     "Loaded chunk mesh at: x: {}, y: {}, z: {}",
-                    r.0.x, r.0.y, r.0.z
+                    pos.x, pos.y, pos.z
                 );
-                world.meshes.insert(r.0, r.1);
-                //world.remove_all_unseen_chunks(&player);
+                world.meshes.insert(pos, mesh);
+                self.mesh_in_process.retain(|&p| p != pos);
             }
             Err(_) => {}
         }

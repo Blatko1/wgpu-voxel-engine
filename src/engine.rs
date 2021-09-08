@@ -21,7 +21,7 @@ pub struct Engine {
     frustum: Frustum,
 }
 
-const TICK: u32 = 5;
+const TICK: u32 = 3;
 
 impl Engine {
     pub fn new(graphics: &Graphics) -> Self {
@@ -58,7 +58,7 @@ impl Engine {
     pub fn update(&mut self, graphics: &Graphics, pool: &uvth::ThreadPool) {
         self.camera.update();
         self.uniforms.update(&self.camera, &graphics);
-        self.player.update(&self.camera);
+        self.player.update_pos(&self.camera);
         unsafe { self.debug_info.update_info() };
         self.frustum.update(&self.camera);
 
@@ -66,7 +66,7 @@ impl Engine {
         self.tick_time += 1;
         if TICK <= self.tick_time {
             self.world
-                .update(&self.chunk_gen, &mut self.player, &pool, &graphics);
+                .update(&mut self.chunk_gen, &mut self.player, &pool, &graphics);
             self.tick_time = 0;
         }
     }
