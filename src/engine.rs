@@ -1,5 +1,5 @@
 use crate::camera::Camera;
-use crate::chunk_loader::ChunkGenerator;
+use crate::chunk_builder::ChunkGenerator;
 use crate::coordinate::{ChunkCoord3D, Coord3DI};
 use crate::debug_info::{DebugInfo, DebugInfoBuilder};
 use crate::frustum_culling::Frustum;
@@ -21,7 +21,7 @@ pub struct Engine {
     frustum: Frustum,
 }
 
-const TICK: u32 = 3;
+const TICK: u32 = 4;
 
 impl Engine {
     pub fn new(graphics: &Graphics) -> Self {
@@ -66,7 +66,7 @@ impl Engine {
         self.tick_time += 1;
         if TICK <= self.tick_time {
             self.world
-                .update(&mut self.chunk_gen, &mut self.player, &pool, &graphics);
+                .update(&mut self.chunk_gen, &mut self.player, &pool, &graphics, &self.frustum);
             self.tick_time = 0;
         }
     }

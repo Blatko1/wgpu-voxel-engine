@@ -23,7 +23,7 @@ impl Frustum {
         Self { v_fov, planes }
     }
 
-    pub fn check(&self, pos: &ChunkCoord3D) -> bool {
+    pub fn contains(&self, pos: &ChunkCoord3D) -> bool {
         let p1 = pos.to_world_position_f32();
         let mut edges = Vec::new();
         edges.push(p1);

@@ -4,7 +4,7 @@ use winit::window::WindowBuilder;
 
 mod camera;
 mod chunk;
-mod chunk_loader;
+mod chunk_builder;
 mod coordinate;
 mod cube;
 mod debug_info;

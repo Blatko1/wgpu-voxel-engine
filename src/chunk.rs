@@ -46,7 +46,7 @@ impl Chunk {
     pub fn create_mesh(
         &self,
         device: Arc<wgpu::Device>,
-        adjacent_chunks: Vec<Arc<Chunk>>,
+        adjacent_chunks: Vec<Option<Arc<Chunk>>>,
     ) -> ChunkMesh {
         let mut faces = Vec::new();
         let world_pos = self.position.to_world_position_i32();
@@ -74,16 +74,19 @@ impl Chunk {
                             ));
                         }
                     } else {
-                        if adjacent_chunks[0].cubes
-                            [(CHUNK_USIZE - 1) + CHUNK_USIZE * z + CHUNK_USIZE * CHUNK_USIZE * y]
-                            .cube_type
-                            == CubeType::AIR
-                        {
-                            faces.push(Quad::new(
-                                Coord3DI::new(pos_x, pos_y, pos_z),
-                                Rotation::LEFT,
-                                texture_index[0],
-                            ));
+                        if let Some(c) = &adjacent_chunks[0] {
+                            if c.cubes[(CHUNK_USIZE - 1)
+                                + CHUNK_USIZE * z
+                                + CHUNK_USIZE * CHUNK_USIZE * y]
+                                .cube_type
+                                == CubeType::AIR
+                            {
+                                faces.push(Quad::new(
+                                    Coord3DI::new(pos_x, pos_y, pos_z),
+                                    Rotation::LEFT,
+                                    texture_index[0],
+                                ));
+                            }
                         }
                     }
                     if x < CHUNK_USIZE - 1 {
@@ -98,16 +101,17 @@ impl Chunk {
                             ));
                         }
                     } else {
-                        if adjacent_chunks[1].cubes
-                            [0 + CHUNK_USIZE * z + CHUNK_USIZE * CHUNK_USIZE * y]
-                            .cube_type
-                            == CubeType::AIR
-                        {
-                            faces.push(Quad::new(
-                                Coord3DI::new(pos_x, pos_y, pos_z),
-                                Rotation::RIGHT,
-                                texture_index[1],
-                            ));
+                        if let Some(c) = &adjacent_chunks[1] {
+                            if c.cubes[0 + CHUNK_USIZE * z + CHUNK_USIZE * CHUNK_USIZE * y]
+                                .cube_type
+                                == CubeType::AIR
+                            {
+                                faces.push(Quad::new(
+                                    Coord3DI::new(pos_x, pos_y, pos_z),
+                                    Rotation::RIGHT,
+                                    texture_index[1],
+                                ));
+                            }
                         }
                     }
                     if z > 0 {
@@ -122,16 +126,19 @@ impl Chunk {
                             ));
                         }
                     } else {
-                        if adjacent_chunks[2].cubes
-                            [x + CHUNK_USIZE * (CHUNK_USIZE - 1) + CHUNK_USIZE * CHUNK_USIZE * y]
-                            .cube_type
-                            == CubeType::AIR
-                        {
-                            faces.push(Quad::new(
-                                Coord3DI::new(pos_x, pos_y, pos_z),
-                                Rotation::BACK,
-                                texture_index[2],
-                            ));
+                        if let Some(c) = &adjacent_chunks[2] {
+                            if c.cubes[x
+                                + CHUNK_USIZE * (CHUNK_USIZE - 1)
+                                + CHUNK_USIZE * CHUNK_USIZE * y]
+                                .cube_type
+                                == CubeType::AIR
+                            {
+                                faces.push(Quad::new(
+                                    Coord3DI::new(pos_x, pos_y, pos_z),
+                                    Rotation::BACK,
+                                    texture_index[2],
+                                ));
+                            }
                         }
                     }
                     if z < CHUNK_USIZE - 1 {
@@ -146,16 +153,17 @@ impl Chunk {
                             ));
                         }
                     } else {
-                        if adjacent_chunks[3].cubes
-                            [x + CHUNK_USIZE * 0 + CHUNK_USIZE * CHUNK_USIZE * y]
-                            .cube_type
-                            == CubeType::AIR
-                        {
-                            faces.push(Quad::new(
-                                Coord3DI::new(pos_x, pos_y, pos_z),
-                                Rotation::FRONT,
-                                texture_index[3],
-                            ));
+                        if let Some(c) = &adjacent_chunks[3] {
+                            if c.cubes[x + CHUNK_USIZE * 0 + CHUNK_USIZE * CHUNK_USIZE * y]
+                                .cube_type
+                                == CubeType::AIR
+                            {
+                                faces.push(Quad::new(
+                                    Coord3DI::new(pos_x, pos_y, pos_z),
+                                    Rotation::FRONT,
+                                    texture_index[3],
+                                ));
+                            }
                         }
                     }
                     if y > 0 {
