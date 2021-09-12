@@ -6,14 +6,14 @@ use crate::frustum_culling::Frustum;
 use crate::player::Player;
 use crate::renderer::graphics::Graphics;
 use crate::renderer::renderer::Renderer;
-use crate::uniform::UniformManager;
+use crate::uniform::RenderPassData;
 use crate::world::World;
 
 pub struct Engine {
     renderer: Renderer,
     world: World,
     chunk_gen: ChunkGenerator,
-    uniforms: UniformManager,
+    uniforms: RenderPassData,
     camera: Camera,
     player: Player,
     debug_info: DebugInfo,
@@ -21,12 +21,12 @@ pub struct Engine {
     frustum: Frustum,
 }
 
-const TICK: u32 = 4;
+const TICK: u32 = 2;
 
 impl Engine {
     pub fn new(graphics: &Graphics) -> Self {
         let camera = Camera::new(&graphics);
-        let uniforms = UniformManager::new(&graphics, &camera);
+        let uniforms = RenderPassData::new(&graphics, &camera);
         let renderer = Renderer::new(&graphics, &uniforms);
         let world = World::new();
         let chunk_gen = ChunkGenerator::new();
@@ -65,8 +65,13 @@ impl Engine {
         // Tick system:
         self.tick_time += 1;
         if TICK <= self.tick_time {
-            self.world
-                .update(&mut self.chunk_gen, &mut self.player, &pool, &graphics, &self.frustum);
+            self.world.update(
+                &mut self.chunk_gen,
+                &mut self.player,
+                &pool,
+                &graphics,
+                &self.frustum,
+            );
             self.tick_time = 0;
         }
     }

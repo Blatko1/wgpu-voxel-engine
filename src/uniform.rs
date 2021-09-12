@@ -3,14 +3,30 @@ use crate::renderer::graphics::Graphics;
 use crate::texture::Texture;
 use std::num::NonZeroU32;
 use wgpu::util::DeviceExt;
+use crate::quad;
 
-pub struct UniformManager {
+pub struct RenderPassData {
+    pub face_vertex_buffer: wgpu::Buffer,
+    pub face_index_buffer: wgpu::Buffer,
+    pub indices_len: u32,
+
     global_matrix: GlobalMatrix,
     texture_array: SampledTextureArray,
 }
 
-impl UniformManager {
+impl RenderPassData {
     pub fn new(graphics: &Graphics, camera: &Camera) -> Self {
+        let face_vertex_buffer = graphics.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("face vertex buffer"),
+            contents: bytemuck::cast_slice(quad::VERTICES),
+            usage: wgpu::BufferUsages::VERTEX,
+        });
+        let face_index_buffer = graphics.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("face index buffer"),
+            contents: bytemuck::cast_slice(quad::INDICES),
+            usage: wgpu::BufferUsages::INDEX,
+        });
+        let indices_len = quad::INDICES.len() as u32;
         let global_matrix = GlobalMatrix::new(&graphics, &camera);
         let texture_array = SampledTextureArray::new(
             &graphics,
@@ -19,6 +35,9 @@ impl UniformManager {
         );
 
         Self {
+            face_vertex_buffer,
+            face_index_buffer,
+            indices_len,
             global_matrix,
             texture_array,
         }
@@ -37,13 +56,13 @@ impl UniformManager {
 }
 
 pub trait SetUniforms<'a> {
-    fn set_bind_groups(&mut self, uniform: &'a UniformManager);
+    fn set_bind_groups(&mut self, uniform: &'a RenderPassData);
 }
 
 impl<'a> SetUniforms<'a> for wgpu::RenderPass<'a> {
-    fn set_bind_groups(&mut self, uniform: &'a UniformManager) {
-        self.set_bind_group(0, &uniform.global_matrix.bind_group, &[]);
-        self.set_bind_group(1, &uniform.texture_array.bind_group, &[]);
+    fn set_bind_groups(&mut self, render_data: &'a RenderPassData) {
+        self.set_bind_group(0, &render_data.global_matrix.bind_group, &[]);
+        self.set_bind_group(1, &render_data.texture_array.bind_group, &[]);
     }
 }
 

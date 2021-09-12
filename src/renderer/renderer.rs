@@ -4,7 +4,7 @@ use crate::camera::Camera;
 use crate::debug_info::DebugInfo;
 use crate::frustum_culling::Frustum;
 use crate::texture::Texture;
-use crate::uniform::UniformManager;
+use crate::uniform::RenderPassData;
 use crate::world::World;
 use std::collections::HashMap;
 
@@ -14,7 +14,7 @@ pub struct Renderer {
 }
 
 impl Renderer {
-    pub fn new(graphics: &Graphics, uniforms: &UniformManager) -> Self {
+    pub fn new(graphics: &Graphics, uniforms: &RenderPassData) -> Self {
         let mut pipelines = HashMap::new();
         pipelines.insert(Type::Main, Pipeline::main_pipeline(&graphics, uniforms));
         let depth_texture_view = Texture::create_depth_texture_view(&graphics);
@@ -28,7 +28,7 @@ impl Renderer {
         &self,
         graphics: &Graphics,
         world: &World,
-        uniform: &UniformManager,
+        uniform: &RenderPassData,
         debug_info: &mut DebugInfo,
         camera: &Camera,
         frustum: &Frustum,
@@ -71,7 +71,7 @@ pub trait Renderable {
         &'a self,
         pass: &mut wgpu::RenderPass<'a>,
         renderer: &'a Renderer,
-        uniform: &'a UniformManager,
+        uniform: &'a RenderPassData,
         frustum: &'a Frustum,
     );
 }

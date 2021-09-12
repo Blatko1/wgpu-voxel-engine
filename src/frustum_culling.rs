@@ -5,7 +5,7 @@ use crate::renderer::pipeline::Pipeline;
 use crate::renderer::renderer::{Renderable, Renderer};
 use crate::renderer::vertex::Vertex;
 use crate::texture::Texture;
-use crate::uniform::UniformManager;
+use crate::uniform::RenderPassData;
 use nalgebra::{Matrix4, Rotation3, Translation3, Vector3, Vector4};
 use wgpu::util::DeviceExt;
 use wgpu::RenderPass;

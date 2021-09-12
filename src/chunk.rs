@@ -3,7 +3,7 @@ use crate::cube::{Cube, CubeType};
 use crate::perlin_noise;
 use crate::quad::{self, Quad, Rotation};
 use crate::texture;
-use crate::uniform::{SetUniforms, UniformManager};
+use crate::uniform::{SetUniforms, RenderPassData};
 use crate::world::{CHUNK_I32, CHUNK_USIZE};
 use rayon::iter::IndexedParallelIterator;
 use rayon::iter::IntoParallelIterator;
@@ -17,7 +17,7 @@ const CHUNK_HEIGHT: usize = CHUNK_USIZE;
 
 #[derive(Debug)]
 pub struct Chunk {
-    position: ChunkCoord3D,
+    pub position: ChunkCoord3D,
     cubes: Vec<Cube>,
 }
 
@@ -217,47 +217,30 @@ impl Chunk {
 }
 
 pub struct ChunkMesh {
-    vertex_buffer: wgpu::Buffer,
-    index_buffer: wgpu::Buffer,
     instance_buffer: wgpu::Buffer,
-    indices_len: usize,
     instances_len: usize,
 }
 
 impl ChunkMesh {
     pub fn new(device: &wgpu::Device, faces: Vec<Quad>) -> Self {
-        let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: None,
-            contents: bytemuck::cast_slice(quad::VERTICES),
-            usage: wgpu::BufferUsages::VERTEX,
-        });
-        let index_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: None,
-            contents: bytemuck::cast_slice(quad::INDICES),
-            usage: wgpu::BufferUsages::INDEX,
-        });
         let instance_data = faces.iter().map(Quad::to_raw).collect::<Vec<_>>();
         let instance_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: None,
             contents: bytemuck::cast_slice(instance_data.as_slice()),
             usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
         });
-        let indices_len = quad::INDICES.len();
         let instances_len = faces.len();
         Self {
-            vertex_buffer,
-            index_buffer,
             instance_buffer,
-            indices_len,
             instances_len,
         }
     }
 
-    pub fn render<'a>(&'a self, pass: &mut wgpu::RenderPass<'a>, uniform: &'a UniformManager) {
-        pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
+    pub fn render<'a>(&'a self, pass: &mut wgpu::RenderPass<'a>, render_data: &'a RenderPassData) {
+        pass.set_vertex_buffer(0, render_data.face_vertex_buffer.slice(..));
         pass.set_vertex_buffer(1, self.instance_buffer.slice(..));
-        pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint32);
-        pass.set_bind_groups(&uniform);
-        pass.draw_indexed(0..self.indices_len as _, 0, 0..self.instances_len as _);
+        pass.set_index_buffer(render_data.face_index_buffer.slice(..), wgpu::IndexFormat::Uint32);
+        pass.set_bind_groups(&render_data);
+        pass.draw_indexed(0..render_data.indices_len, 0, 0..self.instances_len as _);
     }
 }

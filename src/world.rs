@@ -6,7 +6,7 @@ use crate::player::Player;
 use crate::renderer::graphics::Graphics;
 use crate::renderer::pipeline::Type;
 use crate::renderer::renderer::{Renderable, Renderer};
-use crate::uniform::UniformManager;
+use crate::uniform::RenderPassData;
 use hashbrown::HashMap;
 use std::sync::Arc;
 use wgpu::RenderPass;
@@ -16,17 +16,17 @@ pub struct World {
     pub meshes: HashMap<ChunkCoord3D, ChunkMesh>,
 }
 
-pub const RENDER_DISTANCE: i32 = 9;
+pub const RENDER_DISTANCE: i32 = 4;
 
 pub const CHUNK_USIZE: usize = 32;
-pub const CHUNK_I32: i32 = 32;
+pub const CHUNK_I32: i32 = CHUNK_USIZE as i32;
 
 impl Renderable for World {
     fn render<'a>(
         &'a self,
         pass: &mut RenderPass<'a>,
         renderer: &'a Renderer,
-        uniform: &'a UniformManager,
+        uniform: &'a RenderPassData,
         frustum: &'a Frustum,
     ) {
         pass.set_pipeline(&renderer.pipelines.get(&Type::Main).unwrap().pipeline);
@@ -52,27 +52,24 @@ impl World {
         player: &mut Player,
         pool: &uvth::ThreadPool,
         graphics: &Graphics,
-        frustum: &Frustum
+        frustum: &Frustum,
     ) {
         chunk_gen.build_chunks(&graphics, player, self, pool, frustum);
     }
 
     pub fn filter_unseen_chunks(&mut self, player: &Player) {
-        self.chunks.retain(|&p, _| {
-            p.x <= RENDER_DISTANCE + player.chunk.x
+        let mut meshes = &mut self.meshes;
+        self.chunks.retain(|p, _| {
+            if p.x <= RENDER_DISTANCE + player.chunk.x
                 && p.z <= RENDER_DISTANCE + player.chunk.z
                 && p.x >= -RENDER_DISTANCE + player.chunk.x
                 && p.z >= -RENDER_DISTANCE + player.chunk.z
                 && p.y <= RENDER_DISTANCE + player.chunk.y
-                && p.y >= -RENDER_DISTANCE + player.chunk.y
-        });
-        self.meshes.retain(|&p, _| {
-            p.x <= RENDER_DISTANCE + player.chunk.x
-                && p.z <= RENDER_DISTANCE + player.chunk.z
-                && p.x >= -RENDER_DISTANCE + player.chunk.x
-                && p.z >= -RENDER_DISTANCE + player.chunk.z
-                && p.y <= RENDER_DISTANCE + player.chunk.y
-                && p.y >= -RENDER_DISTANCE + player.chunk.y
+                && p.y >= -RENDER_DISTANCE + player.chunk.y {
+                return true;
+            }
+            meshes.remove(p);
+            return false;
         });
     }
 }

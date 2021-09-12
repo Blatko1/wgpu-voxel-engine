@@ -2,7 +2,7 @@ use super::graphics::Graphics;
 use super::instance::InstanceRaw;
 use super::vertex::Vertex;
 use crate::texture::Texture;
-use crate::uniform::UniformManager;
+use crate::uniform::RenderPassData;
 use std::path::Path;
 
 pub struct Pipeline {
@@ -65,7 +65,7 @@ impl Pipeline {
         Self { pipeline }
     }
 
-    pub fn main_pipeline(graphics: &Graphics, uniform: &UniformManager) -> Pipeline {
+    pub fn main_pipeline(graphics: &Graphics, uniform: &RenderPassData) -> Pipeline {
         let vertex_buffer_layouts = vec![
             Vertex::init_buffer_layout(),
             InstanceRaw::init_buffer_layout(),
