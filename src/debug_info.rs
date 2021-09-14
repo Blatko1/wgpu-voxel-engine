@@ -1,5 +1,5 @@
 use crate::camera::Camera;
-use crate::coordinate::{ChunkCoord3D, Coord3DF};
+use crate::coordinate::Coord3DF;
 use crate::renderer::graphics::Graphics;
 use futures::task::SpawnExt;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};

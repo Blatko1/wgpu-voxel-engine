@@ -1,5 +1,4 @@
 use crate::renderer::graphics::Graphics;
-use crate::uniform::MatrixData;
 use nalgebra::{Matrix4, Point3, Vector3};
 use winit::event::{DeviceEvent, KeyboardInput, MouseScrollDelta, VirtualKeyCode};
 

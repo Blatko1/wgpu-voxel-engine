@@ -21,8 +21,6 @@ pub struct ChunkGenerator {
     data_in_process: Vec<ChunkCoord3D>,
 }
 
-const MAX_LOADING_QUEUE_DATA: u32 = 2;
-
 impl ChunkGenerator {
     pub fn new() -> Self {
         let (data_sender, data_receiver) = flume::unbounded();
@@ -42,7 +40,7 @@ impl ChunkGenerator {
         player: &mut Player,
         world: &mut World,
         pool: &ThreadPool,
-        frustum: &Frustum,
+        frustum: &Frustum, // For loading chunks in players view.
     ) {
         // Enqueue chunks within render distance.
         self.load_chunk_queue(world, player);
@@ -129,7 +127,7 @@ impl ChunkGenerator {
             let player_pos = player.chunk.clone();
             for x in -world::RENDER_DISTANCE..world::RENDER_DISTANCE + 1 {
                 for z in -world::RENDER_DISTANCE..world::RENDER_DISTANCE + 1 {
-                    self.enqueue_chunk_data(world, x, 0, z, player_pos);
+                    self.enqueue_chunk_data(world, x + player_pos.x, 0, z + player_pos.z);
                     if player.is_in_new_chunk_pos() {
                         return;
                     }
@@ -138,8 +136,8 @@ impl ChunkGenerator {
         }
     }
 
-    fn enqueue_chunk_data(&mut self, world: &World, x: i32, y: i32, z: i32, chunk: ChunkCoord3D) {
-        let pos = &ChunkCoord3D::new(x + chunk.x, 0, z + chunk.z);
+    fn enqueue_chunk_data(&mut self, world: &World, x: i32, y: i32, z: i32) {
+        let pos = &ChunkCoord3D::new(x, y, z);
         if !world.chunks.contains_key(pos) && !self.data_in_process.contains(pos) {
             self.chunk_load_queue.push(pos.clone());
         }

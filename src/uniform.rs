@@ -149,11 +149,6 @@ impl GlobalMatrix {
     }
 }
 
-#[derive(Hash, Eq, PartialEq)]
-pub enum LayoutType {
-    GlobalMatrix,
-}
-
 pub struct TextureArray {
     textures: Vec<Texture>,
     sampler: wgpu::Sampler,
@@ -166,7 +161,7 @@ impl TextureArray {
     }
 }
 
-pub type SampledTextureArray = Uniform<TextureArray>;
+type SampledTextureArray = Uniform<TextureArray>;
 
 impl SampledTextureArray {
     pub fn new(graphics: &Graphics, textures: Vec<Texture>, sampler: wgpu::Sampler) -> Self {

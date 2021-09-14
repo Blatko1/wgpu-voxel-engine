@@ -1,6 +1,5 @@
 use crate::camera::Camera;
 use crate::chunk_builder::ChunkGenerator;
-use crate::coordinate::{ChunkCoord3D, Coord3DI};
 use crate::debug_info::{DebugInfo, DebugInfoBuilder};
 use crate::frustum_culling::Frustum;
 use crate::player::Player;
@@ -41,7 +40,7 @@ impl Engine {
         )
         .build(&graphics)
         .unwrap();
-        let mut frustum = Frustum::new(&camera);
+        let frustum = Frustum::new(&camera);
         Self {
             renderer,
             world,

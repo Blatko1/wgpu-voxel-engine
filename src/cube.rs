@@ -1,5 +1,3 @@
-use crate::texture;
-
 #[derive(Debug)]
 pub struct Cube {
     pub cube_type: CubeType,

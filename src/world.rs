@@ -58,7 +58,7 @@ impl World {
     }
 
     pub fn filter_unseen_chunks(&mut self, player: &Player) {
-        let mut meshes = &mut self.meshes;
+        let meshes = &mut self.meshes;
         self.chunks.retain(|p, _| {
             if p.x <= RENDER_DISTANCE + player.chunk.x
                 && p.z <= RENDER_DISTANCE + player.chunk.z

@@ -3,7 +3,6 @@ use super::instance::InstanceRaw;
 use super::vertex::Vertex;
 use crate::texture::Texture;
 use crate::uniform::RenderPassData;
-use std::path::Path;
 
 pub struct Pipeline {
     pub pipeline: wgpu::RenderPipeline,

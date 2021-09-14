@@ -1,13 +1,10 @@
 use crate::coordinate::{ChunkCoord3D, Coord3DI};
 use crate::cube::{Cube, CubeType};
 use crate::perlin_noise;
-use crate::quad::{self, Quad, Rotation};
+use crate::quad::{Quad, Rotation};
 use crate::texture;
 use crate::uniform::{RenderPassData, SetUniforms};
-use crate::world::{CHUNK_I32, CHUNK_USIZE};
-use rayon::iter::IndexedParallelIterator;
-use rayon::iter::IntoParallelIterator;
-use rayon::iter::ParallelIterator;
+use crate::world::CHUNK_USIZE;
 use std::sync::Arc;
 use wgpu::util::DeviceExt;
 
