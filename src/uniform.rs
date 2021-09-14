@@ -1,9 +1,9 @@
 use crate::camera::Camera;
+use crate::quad;
 use crate::renderer::graphics::Graphics;
 use crate::texture::Texture;
 use std::num::NonZeroU32;
 use wgpu::util::DeviceExt;
-use crate::quad;
 
 pub struct RenderPassData {
     pub face_vertex_buffer: wgpu::Buffer,
@@ -16,16 +16,22 @@ pub struct RenderPassData {
 
 impl RenderPassData {
     pub fn new(graphics: &Graphics, camera: &Camera) -> Self {
-        let face_vertex_buffer = graphics.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("face vertex buffer"),
-            contents: bytemuck::cast_slice(quad::VERTICES),
-            usage: wgpu::BufferUsages::VERTEX,
-        });
-        let face_index_buffer = graphics.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("face index buffer"),
-            contents: bytemuck::cast_slice(quad::INDICES),
-            usage: wgpu::BufferUsages::INDEX,
-        });
+        let face_vertex_buffer =
+            graphics
+                .device
+                .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                    label: Some("face vertex buffer"),
+                    contents: bytemuck::cast_slice(quad::VERTICES),
+                    usage: wgpu::BufferUsages::VERTEX,
+                });
+        let face_index_buffer =
+            graphics
+                .device
+                .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                    label: Some("face index buffer"),
+                    contents: bytemuck::cast_slice(quad::INDICES),
+                    usage: wgpu::BufferUsages::INDEX,
+                });
         let indices_len = quad::INDICES.len() as u32;
         let global_matrix = GlobalMatrix::new(&graphics, &camera);
         let texture_array = SampledTextureArray::new(

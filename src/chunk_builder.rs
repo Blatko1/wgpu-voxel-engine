@@ -60,13 +60,13 @@ impl ChunkGenerator {
         world: &mut World,
         pool: &uvth::ThreadPool,
     ) {
-            if self.chunk_load_queue.len() > 0 {
-                let adjacent_chunks = ChunkGenerator::check_adjacent_chunks(self.chunk_load_queue[0], &world);
-                self.generate_chunk(&graphics, adjacent_chunks, self.chunk_load_queue[0], &pool);
-                self.data_in_process.push(self.chunk_load_queue[0]);
-                self.chunk_load_queue.remove(0);
-            }
-
+        if self.chunk_load_queue.len() > 0 {
+            let adjacent_chunks =
+                ChunkGenerator::check_adjacent_chunks(self.chunk_load_queue[0], &world);
+            self.generate_chunk(&graphics, adjacent_chunks, self.chunk_load_queue[0], &pool);
+            self.data_in_process.push(self.chunk_load_queue[0]);
+            self.chunk_load_queue.remove(0);
+        }
     }
 
     fn generate_chunk(

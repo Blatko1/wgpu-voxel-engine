@@ -30,12 +30,9 @@ impl Graphics {
         let (device, queue) = block_on(adapter.request_device(
             &wgpu::DeviceDescriptor {
                 label: Some("Device"),
-                features:
-                    wgpu::Features::SAMPLED_TEXTURE_AND_STORAGE_BUFFER_ARRAY_NON_UNIFORM_INDEXING
-                        | wgpu::Features::TEXTURE_BINDING_ARRAY
-                        | wgpu::Features::NON_FILL_POLYGON_MODE
-                        | wgpu::Features::UNSIZED_BINDING_ARRAY
-                        | wgpu::Features::SPIRV_SHADER_PASSTHROUGH,
+                features: wgpu::Features::TEXTURE_BINDING_ARRAY
+                    | wgpu::Features::NON_FILL_POLYGON_MODE
+                    | wgpu::Features::SPIRV_SHADER_PASSTHROUGH,
                 limits: adapter.limits(),
             },
             None,

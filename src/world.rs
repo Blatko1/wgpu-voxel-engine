@@ -65,7 +65,8 @@ impl World {
                 && p.x >= -RENDER_DISTANCE + player.chunk.x
                 && p.z >= -RENDER_DISTANCE + player.chunk.z
                 && p.y <= RENDER_DISTANCE + player.chunk.y
-                && p.y >= -RENDER_DISTANCE + player.chunk.y {
+                && p.y >= -RENDER_DISTANCE + player.chunk.y
+            {
                 return true;
             }
             meshes.remove(p);

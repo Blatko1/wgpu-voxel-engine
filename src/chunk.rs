@@ -3,7 +3,7 @@ use crate::cube::{Cube, CubeType};
 use crate::perlin_noise;
 use crate::quad::{self, Quad, Rotation};
 use crate::texture;
-use crate::uniform::{SetUniforms, RenderPassData};
+use crate::uniform::{RenderPassData, SetUniforms};
 use crate::world::{CHUNK_I32, CHUNK_USIZE};
 use rayon::iter::IndexedParallelIterator;
 use rayon::iter::IntoParallelIterator;
@@ -239,7 +239,10 @@ impl ChunkMesh {
     pub fn render<'a>(&'a self, pass: &mut wgpu::RenderPass<'a>, render_data: &'a RenderPassData) {
         pass.set_vertex_buffer(0, render_data.face_vertex_buffer.slice(..));
         pass.set_vertex_buffer(1, self.instance_buffer.slice(..));
-        pass.set_index_buffer(render_data.face_index_buffer.slice(..), wgpu::IndexFormat::Uint32);
+        pass.set_index_buffer(
+            render_data.face_index_buffer.slice(..),
+            wgpu::IndexFormat::Uint32,
+        );
         pass.set_bind_groups(&render_data);
         pass.draw_indexed(0..render_data.indices_len, 0, 0..self.instances_len as _);
     }
