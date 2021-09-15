@@ -4,6 +4,8 @@ use crate::renderer::graphics::Graphics;
 use futures::task::SpawnExt;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use wgpu_glyph::{ab_glyph, GlyphBrushBuilder, Section, Text};
+use crate::chunk_builder::ChunkGenerator;
+use crate::world::World;
 
 pub struct DebugInfoBuilder {
     position: (f32, f32),
@@ -42,7 +44,7 @@ impl DebugInfoBuilder {
             scale: self.scale,
             screen_bounds: self.screen_bounds,
             brush,
-            text: vec![DebugTools::FPS, DebugTools::Position, DebugTools::Chunk],
+            text: vec![DebugTools::FPS, DebugTools::Position, DebugTools::Chunk, DebugTools::LoadedChunks, DebugTools::ChunksInQueue],
             fps: 0.,
             staging_belt,
             local_pool,
@@ -74,6 +76,8 @@ impl DebugInfo {
         encoder: &mut wgpu::CommandEncoder,
         target: &wgpu::TextureView,
         camera: &Camera,
+        world: &World,
+        chunk_gen: &ChunkGenerator
     ) -> Result<(), String> {
         let fps = String::from(format!("FPS: {:.2}\n", self.fps as u32));
         let pos = String::from(format!(
@@ -82,8 +86,16 @@ impl DebugInfo {
         ));
         let coords = Coord3DF::new(camera.eye.x, camera.eye.y, camera.eye.z).to_chunk_coord();
         let chunk = String::from(format!(
-            "Chunk: x: {}, y: {}, z: {}",
+            "Chunk: x: {}, y: {}, z: {}\n",
             coords.x, coords.y, coords.z
+        ));
+        let chunks_loaded_num = String::from(format!(
+            "Chunks loaded: {}\n",
+            world.chunks.len()
+        ));
+        let chunk_queue = String::from(format!(
+            "Chunks loaded: {}\n",
+            chunk_gen.chunk_load_queue.len()
         ));
         let mut debug_text: Vec<Text> = Vec::new();
         for t in self.text.iter() {
@@ -105,6 +117,20 @@ impl DebugInfo {
                 DebugTools::Chunk => {
                     debug_text.push(
                         Text::new(&chunk)
+                            .with_color([1., 1., 1., 1.])
+                            .with_scale(self.scale),
+                    );
+                },
+                DebugTools::LoadedChunks => {
+                    debug_text.push(
+                        Text::new(&chunks_loaded_num)
+                            .with_color([1., 1., 1., 1.])
+                            .with_scale(self.scale),
+                    );
+                }
+                DebugTools::ChunksInQueue => {
+                    debug_text.push(
+                        Text::new(&chunk_queue)
                             .with_color([1., 1., 1., 1.])
                             .with_scale(self.scale),
                     );
@@ -158,4 +184,6 @@ pub enum DebugTools {
     FPS,
     Position,
     Chunk,
+    LoadedChunks,
+    ChunksInQueue,
 }

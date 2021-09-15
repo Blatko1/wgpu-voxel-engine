@@ -13,9 +13,10 @@ pub struct ChunkGenerator {
     data_receiver: Receiver<(Arc<Chunk>, ChunkMesh)>,
 
     // Chunk Loading Queue
-    chunk_load_queue: Vec<ChunkCoord3D>,
+    pub chunk_load_queue: Vec<ChunkCoord3D>,
 
     // Redraw queue
+    chunk_redraw_queue: Vec<ChunkCoord3D>,
 
     // Chunks in loading process
     data_in_process: Vec<ChunkCoord3D>,
@@ -25,11 +26,13 @@ impl ChunkGenerator {
     pub fn new() -> Self {
         let (data_sender, data_receiver) = flume::unbounded();
         let chunk_load_queue = Vec::new();
+        let chunk_redraw_queue = Vec::new();
         let data_in_process = Vec::new();
         Self {
             data_sender,
             data_receiver,
             chunk_load_queue,
+            chunk_redraw_queue,
             data_in_process,
         }
     }
@@ -44,6 +47,8 @@ impl ChunkGenerator {
     ) {
         // Enqueue chunks within render distance.
         self.load_chunk_queue(world, player);
+        // Enqueue chunks in frustum.
+        self.enqueue_chunks_in_frustum(world, &player, &frustum);
         // Load chunks in queue.
         self.process_chunk_loading_queue(&graphics, world, &pool);
         // Update the world.
@@ -125,21 +130,79 @@ impl ChunkGenerator {
             player.update_chunk_pos();
             self.chunk_load_queue.clear();
             let player_pos = player.chunk.clone();
-            for x in -world::RENDER_DISTANCE..world::RENDER_DISTANCE + 1 {
-                for z in -world::RENDER_DISTANCE..world::RENDER_DISTANCE + 1 {
-                    self.enqueue_chunk_data(world, x + player_pos.x, 0, z + player_pos.z);
-                    if player.is_in_new_chunk_pos() {
-                        return;
-                    }
+            // Render the first chunk at players position.
+            self.enqueue_chunk_data(world, player_pos.x, 0, player_pos.z, None);
+            // Enqueue chunks around the player spirally.
+            for radius in 1..3 {
+                for z in -radius..radius + 1 {
+                    self.enqueue_chunk_data(world, player_pos.x + radius, 0, player_pos.z + z, None);
+                    self.enqueue_chunk_data(world, player_pos.x - radius, 0, player_pos.z + z, None);
+                }
+                for x in (-radius + 1)..radius {
+                    self.enqueue_chunk_data(world, player_pos.x + x, 0, player_pos.z + radius, None);
+                    self.enqueue_chunk_data(world, player_pos.x + x, 0, player_pos.z - radius, None);
                 }
             }
         }
     }
 
-    fn enqueue_chunk_data(&mut self, world: &World, x: i32, y: i32, z: i32) {
+    fn enqueue_chunks_in_frustum(&mut self, world: &mut World, player: &Player, frustum: &Frustum) {
+        let player_pos = player.chunk.clone();
+        for radius in 3..world::RENDER_DISTANCE {
+            for z in -radius..radius + 1 {
+                self.enqueue_chunk_data(
+                    world,
+                    player_pos.x + radius,
+                    0,
+                    player_pos.z + z,
+                    Some(&frustum),
+                );
+                self.enqueue_chunk_data(
+                    world,
+                    player_pos.x - radius,
+                    0,
+                    player_pos.z + z,
+                    Some(&frustum),
+                );
+            }
+            for x in (-radius + 1)..radius {
+                self.enqueue_chunk_data(
+                    world,
+                    player_pos.x + x,
+                    0,
+                    player_pos.z + radius,
+                    Some(&frustum),
+                );
+                self.enqueue_chunk_data(
+                    world,
+                    player_pos.x + x,
+                    0,
+                    player_pos.z - radius,
+                    Some(&frustum),
+                );
+            }
+        }
+    }
+
+    fn enqueue_chunk_data(
+        &mut self,
+        world: &mut World,
+        x: i32,
+        y: i32,
+        z: i32,
+        frustum: Option<&Frustum>,
+    ) {
         let pos = &ChunkCoord3D::new(x, y, z);
-        if !world.chunks.contains_key(pos) && !self.data_in_process.contains(pos) {
-            self.chunk_load_queue.push(pos.clone());
+        // If frustum is not passed then the chunk has to render.
+        let in_frustum = if let Some(f) = frustum {
+            f.contains(pos)
+        } else {
+            true
+        };
+        if in_frustum {
+            if !world.chunks.contains_key(pos) && !self.data_in_process.contains(pos) && !self.chunk_load_queue.contains(pos) {
+                self.chunk_load_queue.push(pos.clone());
+            }
         }
     }
 

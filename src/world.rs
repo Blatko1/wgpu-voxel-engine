@@ -16,7 +16,7 @@ pub struct World {
     pub meshes: HashMap<ChunkCoord3D, ChunkMesh>,
 }
 
-pub const RENDER_DISTANCE: i32 = 4;
+pub const RENDER_DISTANCE: i32 = 10;
 
 pub const CHUNK_USIZE: usize = 32;
 pub const CHUNK_I32: i32 = CHUNK_USIZE as i32;

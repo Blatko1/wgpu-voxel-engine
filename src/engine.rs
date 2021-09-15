@@ -1,5 +1,6 @@
 use crate::camera::Camera;
 use crate::chunk_builder::ChunkGenerator;
+use crate::coordinate::ChunkCoord3D;
 use crate::debug_info::{DebugInfo, DebugInfoBuilder};
 use crate::frustum_culling::Frustum;
 use crate::player::Player;
@@ -20,7 +21,7 @@ pub struct Engine {
     frustum: Frustum,
 }
 
-const TICK: u32 = 2;
+const TICK: u32 = 4;
 
 impl Engine {
     pub fn new(graphics: &Graphics) -> Self {
@@ -34,7 +35,7 @@ impl Engine {
         let debug_info = DebugInfoBuilder::new(
             10.,
             10.,
-            40.,
+            30.,
             graphics.surface_config.format,
             (graphics.size.width, graphics.size.height),
         )
@@ -83,6 +84,7 @@ impl Engine {
             &mut self.debug_info,
             &self.camera,
             &self.frustum,
+            &self.chunk_gen
         )?;
         Ok(())
     }
@@ -92,6 +94,7 @@ impl Engine {
         self.camera.resize(&graphics);
         self.renderer.resize(&graphics);
         self.debug_info.resize(&new_size);
+        self.frustum.update(&self.camera);
     }
 
     pub fn input(&mut self, event: &winit::event::DeviceEvent) {

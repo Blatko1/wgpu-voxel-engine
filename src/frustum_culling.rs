@@ -3,16 +3,14 @@ use crate::coordinate::{ChunkCoord3D, Coord3DF};
 use nalgebra::Matrix4;
 
 pub struct Frustum {
-    v_fov: f32,
     planes: Vec<Plane>,
 }
 
 impl Frustum {
     pub fn new(camera: &Camera) -> Self {
-        let v_fov: f32 = 2. * ((camera.fov.to_radians() / 2.).tan() * camera.aspect).atan();
         let mat = camera.global_matrix;
         let planes = Frustum::matrix_to_planes(mat);
-        Self { v_fov, planes }
+        Self { planes }
     }
 
     pub fn contains(&self, pos: &ChunkCoord3D) -> bool {
@@ -26,8 +24,8 @@ impl Frustum {
         edges.push(Coord3DF::new(p1.x + 32., p1.y + 32., p1.z));
         edges.push(Coord3DF::new(p1.x, p1.y + 32., p1.z + 32.));
         edges.push(Coord3DF::new(p1.x + 32., p1.y + 32., p1.z + 32.));
-        'outer: for p in 0..8 {
-            for i in 0..6 {
+        'outer: for p in 0..edges.len() {
+            for i in 0..self.planes.len() {
                 let dist = self.planes[i].a * edges[p].x as f32
                     + self.planes[i].b * edges[p].y as f32
                     + self.planes[i].c * edges[p].z as f32
@@ -35,8 +33,8 @@ impl Frustum {
                 if dist < 0. {
                     continue 'outer;
                 }
-                return true;
             }
+            return true;
         }
         return false;
     }

@@ -45,8 +45,18 @@ impl Chunk {
         device: Arc<wgpu::Device>,
         adjacent_chunks: Vec<Option<Arc<Chunk>>>,
     ) -> ChunkMesh {
-        let mut faces = Vec::new();
         let world_pos = self.position.to_world_position_i32();
+        let mut faces = self.cull_unseen_triangles(world_pos, adjacent_chunks);
+
+        ChunkMesh::new(&device, faces)
+    }
+
+    fn cull_unseen_triangles(
+        &self,
+        world_pos: Coord3DI,
+        adjacent_chunks: Vec<Option<Arc<Chunk>>>,
+    ) -> Vec<Quad> {
+        let mut faces = Vec::new();
         for y in 0..CHUNK_HEIGHT {
             let pos_y = y as i32 + world_pos.y;
             for z in 0..CHUNK_WIDTH {
@@ -202,15 +212,8 @@ impl Chunk {
                 }
             }
         }
-
-        ChunkMesh::new(&device, faces)
+        faces
     }
-    /*fn local_coords(index: usize) -> (i32, i32, i32) {
-        let y = index / (CHUNK_USIZE * CHUNK_USIZE);
-        let z = (index % (CHUNK_USIZE * CHUNK_USIZE)) / CHUNK_USIZE;
-        let x = (index % (CHUNK_USIZE * CHUNK_USIZE)) % CHUNK_USIZE;
-        (x as i32, z as i32, y as i32)
-    }*/
 }
 
 pub struct ChunkMesh {

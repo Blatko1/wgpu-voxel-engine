@@ -7,6 +7,7 @@ use crate::texture::Texture;
 use crate::uniform::RenderPassData;
 use crate::world::World;
 use std::collections::HashMap;
+use crate::chunk_builder::ChunkGenerator;
 
 pub struct Renderer {
     pub pipelines: HashMap<Type, Pipeline>,
@@ -32,6 +33,7 @@ impl Renderer {
         debug_info: &mut DebugInfo,
         camera: &Camera,
         frustum: &Frustum,
+        chunk_gen: &ChunkGenerator
     ) -> Result<(), wgpu::SurfaceError> {
         let mut encoder = graphics
             .device
@@ -53,7 +55,7 @@ impl Renderer {
             .texture
             .create_view(&wgpu::TextureViewDescriptor::default());
         debug_info
-            .draw(&graphics, &mut encoder, &view, &camera)
+            .draw(&graphics, &mut encoder, &view, &camera, &world, &chunk_gen)
             .unwrap();
         debug_info.finish();
         graphics.queue.submit(Some(encoder.finish()));
