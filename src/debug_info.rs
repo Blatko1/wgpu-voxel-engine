@@ -1,11 +1,11 @@
 use crate::camera::Camera;
+use crate::chunk_builder::ChunkGenerator;
 use crate::coordinate::Coord3DF;
 use crate::renderer::graphics::Graphics;
+use crate::world::World;
 use futures::task::SpawnExt;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use wgpu_glyph::{ab_glyph, GlyphBrushBuilder, Section, Text};
-use crate::chunk_builder::ChunkGenerator;
-use crate::world::World;
 
 pub struct DebugInfoBuilder {
     position: (f32, f32),
@@ -44,7 +44,13 @@ impl DebugInfoBuilder {
             scale: self.scale,
             screen_bounds: self.screen_bounds,
             brush,
-            text: vec![DebugTools::FPS, DebugTools::Position, DebugTools::Chunk, DebugTools::LoadedChunks, DebugTools::ChunksInQueue],
+            text: vec![
+                DebugTools::FPS,
+                DebugTools::Position,
+                DebugTools::Chunk,
+                DebugTools::LoadedChunks,
+                DebugTools::ChunksInQueue,
+            ],
             fps: 0.,
             staging_belt,
             local_pool,
@@ -77,7 +83,7 @@ impl DebugInfo {
         target: &wgpu::TextureView,
         camera: &Camera,
         world: &World,
-        chunk_gen: &ChunkGenerator
+        chunk_gen: &ChunkGenerator,
     ) -> Result<(), String> {
         let fps = String::from(format!("FPS: {:.2}\n", self.fps as u32));
         let pos = String::from(format!(
@@ -89,10 +95,7 @@ impl DebugInfo {
             "Chunk: x: {}, y: {}, z: {}\n",
             coords.x, coords.y, coords.z
         ));
-        let chunks_loaded_num = String::from(format!(
-            "Chunks loaded: {}\n",
-            world.chunks.len()
-        ));
+        let chunks_loaded_num = String::from(format!("Chunks loaded: {}\n", world.chunks.len()));
         let chunk_queue = String::from(format!(
             "Chunks loaded: {}\n",
             chunk_gen.chunk_load_queue.len()
@@ -120,7 +123,7 @@ impl DebugInfo {
                             .with_color([1., 1., 1., 1.])
                             .with_scale(self.scale),
                     );
-                },
+                }
                 DebugTools::LoadedChunks => {
                     debug_text.push(
                         Text::new(&chunks_loaded_num)

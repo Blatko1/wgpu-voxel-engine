@@ -84,7 +84,7 @@ impl Engine {
             &mut self.debug_info,
             &self.camera,
             &self.frustum,
-            &self.chunk_gen
+            &self.chunk_gen,
         )?;
         Ok(())
     }

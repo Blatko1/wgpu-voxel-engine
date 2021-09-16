@@ -1,13 +1,13 @@
 use super::graphics::Graphics;
 use super::pipeline::{Pipeline, Type};
 use crate::camera::Camera;
+use crate::chunk_builder::ChunkGenerator;
 use crate::debug_info::DebugInfo;
 use crate::frustum_culling::Frustum;
 use crate::texture::Texture;
 use crate::uniform::RenderPassData;
 use crate::world::World;
 use std::collections::HashMap;
-use crate::chunk_builder::ChunkGenerator;
 
 pub struct Renderer {
     pub pipelines: HashMap<Type, Pipeline>,
@@ -33,7 +33,7 @@ impl Renderer {
         debug_info: &mut DebugInfo,
         camera: &Camera,
         frustum: &Frustum,
-        chunk_gen: &ChunkGenerator
+        chunk_gen: &ChunkGenerator,
     ) -> Result<(), wgpu::SurfaceError> {
         let mut encoder = graphics
             .device
