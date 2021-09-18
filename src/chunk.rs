@@ -26,7 +26,13 @@ impl Chunk {
     }
 
     fn generate_terrain(cubes: &mut Vec<Cube>, pos: ChunkCoord3D) {
-        let noise = perlin_noise::perlin_3d_block(pos);
+        let noise: Vec<f32>;
+        if !std::is_x86_feature_detected!("avx2") {
+            noise = perlin_noise::perlin_3d_block_sse41(pos);
+        } else {
+            noise = perlin_noise::perlin_3d_block_avx(pos);
+        }
+
         for y in 0..CHUNK_USIZE {
             for z in 0..CHUNK_USIZE {
                 for x in 0..CHUNK_USIZE {

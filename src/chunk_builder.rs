@@ -84,9 +84,10 @@ impl ChunkGenerator {
         let sender = self.data_sender.clone();
         let device = Arc::clone(&graphics.device);
         pool.execute(move || {
-            let data = Arc::new(Chunk::new(pos));
-            let mesh = data.create_mesh(device.clone(), adjacent_chunks);
-            sender.send((data, mesh)).unwrap();
+            let data = Chunk::new(pos);
+            let arc = Arc::new(data);
+            let mesh = arc.create_mesh(device.clone(), adjacent_chunks);
+            sender.send((arc, mesh)).unwrap();
         });
     }
 
@@ -213,6 +214,7 @@ impl ChunkGenerator {
     fn update_world(&mut self, world: &mut World) {
         match self.data_receiver.try_recv() {
             Ok((data, mesh)) => {
+                println!("received");
                 let pos = data.position.clone();
                 println!(
                     "Loaded chunk at: x: {}, y: {}, z: {}",
@@ -222,7 +224,7 @@ impl ChunkGenerator {
                 world.meshes.insert(pos, mesh);
                 self.data_in_process.retain(|&p| p != pos);
             }
-            Err(_) => {}
+            Err(e) => {}
         }
     }
 }
