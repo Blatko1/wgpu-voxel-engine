@@ -1,6 +1,5 @@
 use crate::camera::Camera;
 use crate::chunk_builder::ChunkGenerator;
-use crate::coordinate::ChunkCoord3D;
 use crate::debug_info::{DebugInfo, DebugInfoBuilder};
 use crate::frustum_culling::Frustum;
 use crate::player::Player;

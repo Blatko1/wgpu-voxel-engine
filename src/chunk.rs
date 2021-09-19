@@ -51,7 +51,7 @@ impl Chunk {
         adjacent_chunks: Vec<Option<Arc<Chunk>>>,
     ) -> ChunkMesh {
         let world_pos = self.position.to_world_position_i32();
-        let mut faces = self.cull_unseen_triangles(world_pos, adjacent_chunks);
+        let faces = self.cull_unseen_triangles(world_pos, adjacent_chunks);
 
         ChunkMesh::new(&device, faces)
     }
@@ -243,11 +243,6 @@ impl Chunk {
         }
         faces
     }
-}
-
-pub enum CullState {
-    Culled,
-    NotCulled,
 }
 
 pub struct ChunkMesh {

@@ -49,7 +49,7 @@ impl DebugInfoBuilder {
                 DebugTools::Position,
                 DebugTools::Chunk,
                 DebugTools::LoadedChunks,
-                DebugTools::ChunksInQueue,
+                DebugTools::RebuildQueue,
             ],
             fps: 0.,
             staging_belt,
@@ -97,8 +97,8 @@ impl DebugInfo {
         ));
         let chunks_loaded_num = String::from(format!("Chunks loaded: {}\n", world.chunks.len()));
         let chunk_queue = String::from(format!(
-            "Chunks loaded: {}\n",
-            chunk_gen.chunk_load_queue.len()
+            "Rebuild queue: {}\n",
+            chunk_gen.chunk_rebuild_queue.len()
         ));
         let mut debug_text: Vec<Text> = Vec::new();
         for t in self.text.iter() {
@@ -131,7 +131,7 @@ impl DebugInfo {
                             .with_scale(self.scale),
                     );
                 }
-                DebugTools::ChunksInQueue => {
+                DebugTools::RebuildQueue => {
                     debug_text.push(
                         Text::new(&chunk_queue)
                             .with_color([1., 1., 1., 1.])
@@ -188,5 +188,5 @@ pub enum DebugTools {
     Position,
     Chunk,
     LoadedChunks,
-    ChunksInQueue,
+    RebuildQueue,
 }
