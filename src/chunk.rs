@@ -12,7 +12,6 @@ const CHUNK_LENGTH: usize = CHUNK_USIZE;
 const CHUNK_WIDTH: usize = CHUNK_USIZE;
 const CHUNK_HEIGHT: usize = CHUNK_USIZE;
 
-#[derive(Debug)]
 pub struct Chunk {
     pub position: ChunkCoord3D,
     cubes: Vec<Cube>,
@@ -100,6 +99,12 @@ impl Chunk {
                                     texture_index[0],
                                 ));
                             }
+                        } else {
+                            faces.push(Quad::new(
+                                Coord3DI::new(pos_x, pos_y, pos_z),
+                                Rotation::LEFT,
+                                texture_index[0],
+                            ));
                         }
                     }
                     if x < CHUNK_USIZE - 1 {
@@ -125,6 +130,12 @@ impl Chunk {
                                     texture_index[1],
                                 ));
                             }
+                        } else {
+                            faces.push(Quad::new(
+                                Coord3DI::new(pos_x, pos_y, pos_z),
+                                Rotation::RIGHT,
+                                texture_index[1],
+                            ));
                         }
                     }
                     if z > 0 {
@@ -152,6 +163,12 @@ impl Chunk {
                                     texture_index[2],
                                 ));
                             }
+                        } else {
+                            faces.push(Quad::new(
+                                Coord3DI::new(pos_x, pos_y, pos_z),
+                                Rotation::BACK,
+                                texture_index[2],
+                            ));
                         }
                     }
                     if z < CHUNK_USIZE - 1 {
@@ -177,6 +194,12 @@ impl Chunk {
                                     texture_index[3],
                                 ));
                             }
+                        } else {
+                            faces.push(Quad::new(
+                                Coord3DI::new(pos_x, pos_y, pos_z),
+                                Rotation::FRONT,
+                                texture_index[3],
+                            ));
                         }
                     }
                     if y > 0 {
@@ -220,6 +243,11 @@ impl Chunk {
         }
         faces
     }
+}
+
+pub enum CullState {
+    Culled,
+    NotCulled,
 }
 
 pub struct ChunkMesh {

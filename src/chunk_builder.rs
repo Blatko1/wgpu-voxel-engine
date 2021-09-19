@@ -11,12 +11,15 @@ use uvth::ThreadPool;
 pub struct ChunkGenerator {
     data_sender: Sender<(Arc<Chunk>, ChunkMesh)>,
     data_receiver: Receiver<(Arc<Chunk>, ChunkMesh)>,
+    mesh_sender: Sender<(ChunkCoord3D, ChunkMesh)>,
+    mesh_receiver: Receiver<(ChunkCoord3D, ChunkMesh)>,
 
     // Chunk Loading Queue
     pub chunk_load_queue: Vec<ChunkCoord3D>,
 
-    // Redraw queue
-    chunk_redraw_queue: Vec<ChunkCoord3D>,
+    // Rebuild queue
+    pub not_culled_chunks: Vec<ChunkCoord3D>,
+    chunk_rebuild_queue: Vec<ChunkCoord3D>,
 
     // Chunks in loading process
     data_in_process: Vec<ChunkCoord3D>,
@@ -25,14 +28,19 @@ pub struct ChunkGenerator {
 impl ChunkGenerator {
     pub fn new() -> Self {
         let (data_sender, data_receiver) = flume::unbounded();
+        let (mesh_sender, mesh_receiver) = flume::unbounded();
         let chunk_load_queue = Vec::new();
-        let chunk_redraw_queue = Vec::new();
+        let not_culled_chunks = Vec::new();
+        let chunk_rebuild_queue = Vec::new();
         let data_in_process = Vec::new();
         Self {
             data_sender,
             data_receiver,
+            mesh_sender,
+            mesh_receiver,
             chunk_load_queue,
-            chunk_redraw_queue,
+            not_culled_chunks,
+            chunk_rebuild_queue,
             data_in_process,
         }
     }
@@ -51,10 +59,12 @@ impl ChunkGenerator {
         self.enqueue_chunks_in_frustum(world, &player, &frustum);
         // Load chunks in queue.
         self.process_chunk_loading_queue(&graphics, world, &pool);
+        // Rebuild chunks in queue.
+        self.process_rebuild_queue(&graphics, &world, &pool);
         // Update the world.
         self.update_world(world);
         // Remove unseen chunks.
-        world.filter_unseen_chunks(&player);
+        world.filter_unseen_chunks(&player, self);
         // Clear load queue.
         self.chunk_load_queue.clear();
     }
@@ -65,33 +75,46 @@ impl ChunkGenerator {
         world: &mut World,
         pool: &uvth::ThreadPool,
     ) {
-        if self.chunk_load_queue.len() > 0 {
-            let adjacent_chunks =
-                ChunkGenerator::check_adjacent_chunks(self.chunk_load_queue[0], &world);
-            self.generate_chunk(&graphics, adjacent_chunks, self.chunk_load_queue[0], &pool);
-            self.data_in_process.push(self.chunk_load_queue[0]);
-            self.chunk_load_queue.remove(0);
+        if !self.chunk_load_queue.is_empty() {
+            let pos = self.chunk_load_queue.remove(0);
+            let adjacent_chunks = self.adjacent_chunks(pos, &world);
+            let sender = self.data_sender.clone();
+            let device = Arc::clone(&graphics.device);
+            pool.execute(move || {
+                let data = Arc::new(Chunk::new(pos));
+                let mesh = data.create_mesh(device.clone(), adjacent_chunks);
+                sender.send((data, mesh)).unwrap();
+            });
+            self.data_in_process.push(pos);
         }
     }
 
-    fn generate_chunk(
+    fn process_rebuild_queue(
         &mut self,
         graphics: &Graphics,
-        adjacent_chunks: Vec<Option<Arc<Chunk>>>,
-        pos: ChunkCoord3D,
+        world: &World,
         pool: &uvth::ThreadPool,
     ) {
-        let sender = self.data_sender.clone();
-        let device = Arc::clone(&graphics.device);
-        pool.execute(move || {
-            let data = Chunk::new(pos);
-            let arc = Arc::new(data);
-            let mesh = arc.create_mesh(device.clone(), adjacent_chunks);
-            sender.send((arc, mesh)).unwrap();
-        });
+        // Only rebuild when chunk load queue is empty.
+        if self.chunk_load_queue.is_empty() {
+            if !self.chunk_rebuild_queue.is_empty() {
+                let pos = self.chunk_rebuild_queue.remove(0);
+                // Only rebuild if the chunk queued for rebuild still exists.
+                if let Some(d) = world.chunks.get(&pos) {
+                    let adjacent_chunks = self.adjacent_chunks(pos, &world);
+                    let data = d.clone();
+                    let sender = self.mesh_sender.clone();
+                    let device = Arc::clone(&graphics.device);
+                    pool.execute(move || {
+                        let new_mesh = data.create_mesh(device, adjacent_chunks);
+                        sender.send((pos, new_mesh)).unwrap();
+                    });
+                }
+            }
+        }
     }
 
-    fn try_load_chunk_directly(
+    fn load_chunk_directly(
         &mut self,
         graphics: &Graphics,
         pos: ChunkCoord3D,
@@ -99,14 +122,21 @@ impl ChunkGenerator {
         pool: &ThreadPool,
     ) {
         if !self.is_chunk_loaded(&world, &pos) {
-            let adjacent_chunks = ChunkGenerator::check_adjacent_chunks(pos, &world);
-            self.generate_chunk(&graphics, adjacent_chunks, pos, &pool);
+            let adjacent_chunks = self.adjacent_chunks(pos, &world);
+            let sender = self.data_sender.clone();
+            let device = Arc::clone(&graphics.device);
+            pool.execute(move || {
+                let data = Arc::new(Chunk::new(pos));
+                let mesh = data.create_mesh(device.clone(), adjacent_chunks);
+                sender.send((data, mesh)).unwrap();
+            });
             self.data_in_process.push(pos);
         }
     }
 
-    fn check_adjacent_chunks(pos: ChunkCoord3D, world: &World) -> Vec<Option<Arc<Chunk>>> {
+    fn adjacent_chunks(&mut self, pos: ChunkCoord3D, world: &World) -> Vec<Option<Arc<Chunk>>> {
         let mut adjacent_chunks = Vec::new();
+        let mut is_surrounded = true;
         if let Some(c) = world
             .chunks
             .get(&ChunkCoord3D::new(pos.x - 1, pos.y, pos.z))
@@ -114,6 +144,7 @@ impl ChunkGenerator {
             adjacent_chunks.push(Some(c.clone()));
         } else {
             adjacent_chunks.push(None);
+            is_surrounded = false;
         }
         if let Some(c) = world
             .chunks
@@ -122,6 +153,7 @@ impl ChunkGenerator {
             adjacent_chunks.push(Some(c.clone()));
         } else {
             adjacent_chunks.push(None);
+            is_surrounded = false;
         }
         if let Some(c) = world
             .chunks
@@ -130,6 +162,7 @@ impl ChunkGenerator {
             adjacent_chunks.push(Some(c.clone()));
         } else {
             adjacent_chunks.push(None);
+            is_surrounded = false;
         }
         if let Some(c) = world
             .chunks
@@ -138,6 +171,10 @@ impl ChunkGenerator {
             adjacent_chunks.push(Some(c.clone()));
         } else {
             adjacent_chunks.push(None);
+            is_surrounded = false;
+        }
+        if is_surrounded {
+            self.not_culled_chunks.retain(|&p| p != pos);
         }
         adjacent_chunks
     }
@@ -152,22 +189,38 @@ impl ChunkGenerator {
         if player.is_in_new_chunk_pos() {
             player.update_chunk_pos();
             let player_pos = player.chunk.clone();
-            let player_chunk = ChunkCoord3D::new(player_pos.x, 0, player_pos.z);
+            let player_chunk_pos = ChunkCoord3D::new(player_pos.x, 0, player_pos.z);
             // Render the first chunk at players position.
-            self.try_load_chunk_directly(&graphics, player_chunk, &world, &pool);
+            self.load_chunk_directly(&graphics, player_chunk_pos, &world, &pool);
             // Load chunks around the player.
             let radius = 1;
             for z in -radius..radius + 1 {
-                let mut pos = ChunkCoord3D::new(player_pos.x + radius, 0, player_pos.z + z);
-                self.try_load_chunk_directly(&graphics, pos, &world, &pool);
-                pos = ChunkCoord3D::new(player_pos.x - radius, 0, player_pos.z + z);
-                self.try_load_chunk_directly(&graphics, pos, &world, &pool);
+                self.load_chunk_directly(
+                    &graphics,
+                    ChunkCoord3D::new(player_pos.x + radius, 0, player_pos.z + z),
+                    &world,
+                    &pool,
+                );
+                self.load_chunk_directly(
+                    &graphics,
+                    ChunkCoord3D::new(player_pos.x - radius, 0, player_pos.z + z),
+                    &world,
+                    &pool,
+                );
             }
             for x in (-radius + 1)..radius {
-                let mut pos = ChunkCoord3D::new(player_pos.x + x, 0, player_pos.z + radius);
-                self.try_load_chunk_directly(&graphics, pos, &world, &pool);
-                pos = ChunkCoord3D::new(player_pos.x + x, 0, player_pos.z - radius);
-                self.try_load_chunk_directly(&graphics, pos, &world, &pool);
+                self.load_chunk_directly(
+                    &graphics,
+                    ChunkCoord3D::new(player_pos.x + x, 0, player_pos.z + radius),
+                    &world,
+                    &pool,
+                );
+                self.load_chunk_directly(
+                    &graphics,
+                    ChunkCoord3D::new(player_pos.x + x, 0, player_pos.z - radius),
+                    &world,
+                    &pool,
+                );
             }
         }
     }
@@ -177,25 +230,38 @@ impl ChunkGenerator {
         if world::RENDER_DISTANCE > 1 {
             for radius in 2..world::RENDER_DISTANCE {
                 for z in -radius..radius + 1 {
-                    let mut pos = ChunkCoord3D::new(player_pos.x + radius, 0, player_pos.z + z);
-                    self.try_enqueue_data(&world, pos, &frustum);
-                    pos = ChunkCoord3D::new(player_pos.x - radius, 0, player_pos.z + z);
-                    self.try_enqueue_data(&world, pos, &frustum);
+                    self.enqueue_data(
+                        &world,
+                        ChunkCoord3D::new(player_pos.x + radius, 0, player_pos.z + z),
+                        &frustum,
+                    );
+                    self.enqueue_data(
+                        &world,
+                        ChunkCoord3D::new(player_pos.x - radius, 0, player_pos.z + z),
+                        &frustum,
+                    );
                 }
                 for x in (-radius + 1)..radius {
-                    let mut pos = ChunkCoord3D::new(player_pos.x + x, 0, player_pos.z + radius);
-                    self.try_enqueue_data(&world, pos, &frustum);
-                    pos = ChunkCoord3D::new(player_pos.x + x, 0, player_pos.z - radius);
-                    self.try_enqueue_data(&world, pos, &frustum);
+                    self.enqueue_data(
+                        &world,
+                        ChunkCoord3D::new(player_pos.x + x, 0, player_pos.z + radius),
+                        &frustum,
+                    );
+                    self.enqueue_data(
+                        &world,
+                        ChunkCoord3D::new(player_pos.x + x, 0, player_pos.z - radius),
+                        &frustum,
+                    );
                 }
             }
         }
     }
 
-    fn try_enqueue_data(&mut self, world: &World, pos: ChunkCoord3D, frustum: &Frustum) {
+    fn enqueue_data(&mut self, world: &World, pos: ChunkCoord3D, frustum: &Frustum) {
         if !self.is_chunk_loaded(world, &pos) {
             if frustum.contains(&pos) {
                 self.chunk_load_queue.push(pos);
+                self.not_culled_chunks.push(pos);
             }
         }
     }
@@ -211,10 +277,43 @@ impl ChunkGenerator {
         return true;
     }
 
+    // Rebuilding the chunk
+    fn rebuild_adjacent_chunks(&mut self, pos: &ChunkCoord3D) {
+        if !self.not_culled_chunks.is_empty() {
+            if self
+                .not_culled_chunks
+                .contains(&ChunkCoord3D::new(pos.x + 1, pos.y, pos.z))
+            {
+                self.chunk_rebuild_queue
+                    .push(ChunkCoord3D::new(pos.x + 1, pos.y, pos.z));
+            }
+            if self
+                .not_culled_chunks
+                .contains(&ChunkCoord3D::new(pos.x - 1, pos.y, pos.z))
+            {
+                self.chunk_rebuild_queue
+                    .push(ChunkCoord3D::new(pos.x - 1, pos.y, pos.z));
+            }
+            if self
+                .not_culled_chunks
+                .contains(&ChunkCoord3D::new(pos.x, pos.y, pos.z + 1))
+            {
+                self.chunk_rebuild_queue
+                    .push(ChunkCoord3D::new(pos.x, pos.y, pos.z + 1));
+            }
+            if self
+                .not_culled_chunks
+                .contains(&ChunkCoord3D::new(pos.x, pos.y, pos.z - 1))
+            {
+                self.chunk_rebuild_queue
+                    .push(ChunkCoord3D::new(pos.x, pos.y, pos.z - 1));
+            }
+        }
+    }
+
     fn update_world(&mut self, world: &mut World) {
         match self.data_receiver.try_recv() {
             Ok((data, mesh)) => {
-                println!("received");
                 let pos = data.position.clone();
                 println!(
                     "Loaded chunk at: x: {}, y: {}, z: {}",
@@ -223,8 +322,17 @@ impl ChunkGenerator {
                 world.chunks.insert(pos, data);
                 world.meshes.insert(pos, mesh);
                 self.data_in_process.retain(|&p| p != pos);
+                self.rebuild_adjacent_chunks(&pos); // Used for rebuilding adjacent chunks, in other words culling the nearby chunks.
             }
-            Err(e) => {}
+            Err(_) => {}
+        }
+
+        match self.mesh_receiver.try_recv() {
+            Ok((pos, mesh)) => {
+                println!("Rebuilt chunk at: x: {}, y: {}, z: {}", pos.x, pos.y, pos.z);
+                world.meshes.insert(pos, mesh);
+            }
+            Err(_) => {}
         }
     }
 }
