@@ -56,21 +56,4 @@ impl World {
     ) {
         chunk_gen.build_chunks(&graphics, player, self, pool, frustum);
     }
-
-    pub fn filter_unseen_chunks(&mut self, player: &Player) {
-        let meshes = &mut self.meshes;
-        self.chunks.retain(|p, _| {
-            if p.x <= RENDER_DISTANCE + player.chunk.x
-                && p.z <= RENDER_DISTANCE + player.chunk.z
-                && p.x >= -RENDER_DISTANCE + player.chunk.x
-                && p.z >= -RENDER_DISTANCE + player.chunk.z
-                && p.y <= RENDER_DISTANCE + player.chunk.y
-                && p.y >= -RENDER_DISTANCE + player.chunk.y
-            {
-                return true;
-            }
-            meshes.remove(p);
-            return false;
-        });
-    }
 }

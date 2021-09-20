@@ -60,10 +60,10 @@ impl ChunkGenerator {
         self.process_rebuild_queue(&graphics, &world, &pool);
         // Update the world.
         self.update_world(world);
+        // Clean up queues.
+        self.clean_up_queues();
         // Remove unseen chunks.
-        world.filter_unseen_chunks(&player);
-        // Clear load queue.
-        self.chunk_load_queue.clear();
+        self.filter_unseen_chunks(world, &player);
     }
 
     fn process_chunk_loading_queue(
@@ -299,6 +299,14 @@ impl ChunkGenerator {
         }
     }
 
+    fn clean_up_queues(&mut self) {
+        // Clear load queue.
+        self.chunk_load_queue.clear();
+        // Clear duplicates in rebuild queue.
+        self.chunk_rebuild_queue.sort();
+        self.chunk_rebuild_queue.dedup();
+    }
+
     fn update_world(&mut self, world: &mut World) {
         match self.data_receiver.try_recv() {
             Ok((data, mesh)) => {
@@ -314,7 +322,6 @@ impl ChunkGenerator {
             }
             Err(_) => {}
         }
-
         match self.mesh_receiver.try_recv() {
             Ok((pos, mesh)) => {
                 println!("Rebuilt chunk at: x: {}, y: {}, z: {}", pos.x, pos.y, pos.z);
@@ -322,5 +329,25 @@ impl ChunkGenerator {
             }
             Err(_) => {}
         }
+    }
+
+    fn filter_unseen_chunks(&mut self, world: &mut World, player: &Player) {
+        let meshes = &mut world.meshes;
+        world.chunks.retain(|p, _| {
+            if p.x <= world::RENDER_DISTANCE + player.chunk.x
+                && p.z <= world::RENDER_DISTANCE + player.chunk.z
+                && p.x >= -world::RENDER_DISTANCE + player.chunk.x
+                && p.z >= -world::RENDER_DISTANCE + player.chunk.z
+                && p.y <= world::RENDER_DISTANCE + player.chunk.y
+                && p.y >= -world::RENDER_DISTANCE + player.chunk.y
+            {
+                return true;
+            }
+            meshes.remove(p);
+            if let Some(i) = self.chunk_rebuild_queue.iter().position(|&pos| pos == *p) {
+                self.chunk_rebuild_queue.remove(i);
+            }
+            return false;
+        });
     }
 }

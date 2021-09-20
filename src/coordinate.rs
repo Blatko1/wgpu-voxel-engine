@@ -38,7 +38,7 @@ impl Coord3DF {
     }
 }
 
-#[derive(Eq, PartialEq, Hash, Clone, Copy, Debug)]
+#[derive(Eq, PartialEq, Hash, Clone, Copy, Debug, PartialOrd, Ord)]
 pub struct ChunkCoord3D {
     pub x: i32,
     pub y: i32,
