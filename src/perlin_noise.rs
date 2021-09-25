@@ -2,7 +2,7 @@ use crate::coordinate::ChunkCoord3D;
 use crate::world::{CHUNK_I32, CHUNK_USIZE};
 use simdnoise::NoiseBuilder;
 
-pub fn perlin_3d_block_avx(pos: ChunkCoord3D) -> Vec<f32> {
+pub fn perlin_3d_block_avx2(pos: ChunkCoord3D) -> Vec<f32> {
     let generator = NoiseBuilder::fbm_3d_offset(
         (pos.x * CHUNK_I32) as f32,
         CHUNK_USIZE,

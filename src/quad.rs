@@ -47,7 +47,6 @@ impl Quad {
     pub fn to_raw(&self) -> InstanceRaw {
         let t_matrix: [[f32; 4]; 4] =
             (self.position.to_homogeneous() * self.rotation.matrix().to_homogeneous()).into();
-
         InstanceRaw {
             t_matrix,
             texture_index: self.texture_index,

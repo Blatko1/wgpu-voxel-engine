@@ -93,7 +93,7 @@ impl ChunkGenerator {
         pool: &uvth::ThreadPool,
     ) {
         // Only rebuild when chunk load queue is empty.
-        if self.chunk_load_queue.is_empty() {
+        if self.data_in_process.is_empty() {
             if !self.chunk_rebuild_queue.is_empty() {
                 let pos = self.chunk_rebuild_queue.remove(0);
                 // Only rebuild if the chunk queued for rebuild still exists.

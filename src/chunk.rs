@@ -29,7 +29,7 @@ impl Chunk {
         if !std::is_x86_feature_detected!("avx2") {
             noise = perlin_noise::perlin_3d_block_sse41(pos);
         } else {
-            noise = perlin_noise::perlin_3d_block_avx(pos);
+            noise = perlin_noise::perlin_3d_block_avx2(pos);
         }
 
         for y in 0..CHUNK_USIZE {
@@ -256,7 +256,7 @@ impl ChunkMesh {
         let instance_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: None,
             contents: bytemuck::cast_slice(instance_data.as_slice()),
-            usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+            usage: wgpu::BufferUsages::VERTEX,
         });
         let instances_len = faces.len();
         Self {

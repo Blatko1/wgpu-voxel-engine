@@ -20,7 +20,7 @@ pub struct Engine {
     frustum: Frustum,
 }
 
-const TICK: u32 = 4;
+const TICK: u32 = 7;
 
 impl Engine {
     pub fn new(graphics: &Graphics) -> Self {
