@@ -2,7 +2,8 @@
 
 A voxel engine made in Rust with [wgpu-rs](https://github.com/gfx-rs/wgpu) framework.
 
-Loads chunks super fast with almost no FPS drops!
+Loads chunks super fast with almost no FPS drops! 
+> After further inspection I think the multithreading is wrong which could boost the performance.
 
 Primary goal of this project is to make *procedural terrain generation* similar to Minecraft's terrain generation.
 
